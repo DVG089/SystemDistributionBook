@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace SiteBook
 {
+    /// <summary>
+    /// Класс владения языком
+    /// </summary>
     public class LevelLanguageSDB
     {
-        int LevelL;
         /// <summary>
         /// Язык
         /// </summary>
@@ -16,30 +18,19 @@ namespace SiteBook
         /// <summary>
         /// Уровень владения
         /// </summary>
-        public int Level
-        {
-            get
-            {
-                return LevelL;
-            }
-            set
-            {
-                if (value > 10)
-                    LevelL = 10;
-                else if (value < 1)
-                    LevelL = 1;
-                else
-                    LevelL = value;
-            }
-        }
+        public int Level { get; set; }
+
+        /// <summary>
+        /// Конструктор по умолчанию
+        /// </summary>
         public LevelLanguageSDB()
         {
         }
         /// <summary>
         /// Конструктор объекта язык-уровень
         /// </summary>
-        /// <param name="language"></param>
-        /// <param name="level"></param>
+        /// <param name="language">Язык</param>
+        /// <param name="level">Уровень владения</param>
         public LevelLanguageSDB(BookSDB.languageEnum language, int level)
         {
             Language = language;

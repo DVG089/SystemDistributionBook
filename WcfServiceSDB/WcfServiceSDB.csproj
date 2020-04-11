@@ -86,6 +86,7 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FilterSDB.cs" />
     <Compile Include="ServiceSDB.svc.cs">
       <DependentUpon>ServiceSDB.svc</DependentUpon>
     </Compile>
@@ -97,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <Content Include="Properties\DataSources\System.Data.DataSet.datasource" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

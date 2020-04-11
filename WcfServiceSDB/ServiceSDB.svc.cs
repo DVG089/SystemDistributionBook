@@ -7,6 +7,7 @@ using System.ServiceModel.Web;
 using System.Text;
 using System.Data;
 using MySql.Data.MySqlClient;
+using System.Configuration;
 
 namespace WcfServiceSDB
 {
@@ -15,195 +16,341 @@ namespace WcfServiceSDB
         /// <summary>
         /// Соединение с MySQL
         /// </summary>
-        MySqlConnection connection;
+        private MySqlConnection ConnectionMySQL;
         /// <summary>
-        /// Строка соединения с MySQL
+        /// Команда MySQL
         /// </summary>
-        string connectionString;
+        private MySqlCommand Command;
+        /// <summary>
+        /// Объект фильтра
+        /// </summary>
+        private FilterSDB Filter;
+        /// <summary>
+        /// Электронный адресс клиента
+        /// </summary>
+        private string Address;
         /// <summary>
         /// Список используемых языков
         /// </summary>
-        List<string> listLanguage;
+        private List<string> listLanguage;
+        /// <summary>
+        /// Статус чтения книги:Прочитана
+        /// </summary>
+        private string ReadEnd;
+        /// <summary>
+        /// Статус чтения книги:Читается
+        /// </summary>
+        private string ReadNow;
+        /// <summary>
+        /// Статус подписки:Подписан
+        /// </summary>
+        private string SubscriptionOn;
+        /// <summary>
+        /// Статус подписки:Отписан
+        /// </summary>
+        private string SubscriptionOff;
+
         /// <summary>
         /// Конструтор объекта
         /// </summary>
         public ServiceSDB()
         {
-            connectionString = "Server=127.0.0.1;Database=systemdistributionbook;port=3306;User Id=root;password=n1477353";
+            string connectionString = ConfigurationManager.ConnectionStrings["MySQL"].ConnectionString;
+            ConnectionMySQL = new MySqlConnection(connectionString);
+            Command = null;
+            Filter = null;
+            Address = null;
             listLanguage = new List<string> { "Русский", "Английский", "Немецкий", "Итальянский", "Испанский" };
+            ReadEnd = "Прочитана";
+            ReadNow = "Читается";
+            SubscriptionOn = "Подписан";
+            SubscriptionOff = "Отписан";
         }
         /// <summary>
         /// Возвращает информацию о клиенте в 2 таблицах
         /// </summary>
         /// <param name="address">Электронный адресс клиента</param>
-        /// <returns></returns>
+        /// <returns>Информация о клиенте</returns>
         public DataSet GetClientInfo(string address)
         {
             string sql;
-            DataSet ds = new DataSet();
-            ds.Tables.Add();
-            ds.Tables.Add();
+            DataSet dataSetClient = new DataSet();
+            dataSetClient.Tables.Add();
+            dataSetClient.Tables.Add();
             for (int i = 0; i <= 1; i++)
             {
-                //запрос
-                if (i == 0) sql = "SELECT * FROM clients WHERE Address = @Address";
-                else sql = "SELECT * FROM LevelLanguages WHERE AddressClient = @Address";
-                using (connection = new MySqlConnection(connectionString))
+                if (i == 0)
                 {
-                    connection.Open();
-                    MySqlCommand command = new MySqlCommand(sql, connection);
-                    MySqlParameter AddressParam = new MySqlParameter("@Address", address);
-                    command.Parameters.Add(AddressParam);
-                    MySqlDataAdapter adapter = new MySqlDataAdapter(command);
-                    adapter.Fill(ds.Tables[i]);
+                    sql = "SELECT * FROM clients WHERE Address = @Address";
+                }
+                else 
+                { 
+                    sql = "SELECT * FROM LevelLanguages WHERE AddressClient = @Address"; 
+                }
+                try
+                {
+                    ConnectionMySQL.Open();
+                    Command = new MySqlCommand(sql, ConnectionMySQL);
+                    Command.Parameters.AddWithValue("@Address", address);
+                    MySqlDataAdapter adapter = new MySqlDataAdapter(Command);
+                    adapter.Fill(dataSetClient.Tables[i]);
+                }
+                finally
+                {
+                    ConnectionMySQL.Close();
                 }
             }
-            return ds;
+            return dataSetClient;
         }
         /// <summary>
         /// Возвращает информацию о книгах
         /// </summary>
-        /// <param name="statusReading">статус чтения (1-прочитана,2-читается)</param>
-        /// <param name="language">Язык книги</param>
-        /// <param name="name">Название книги</param>
+        /// <param name="filter">Объект фильтра</param>
         /// <param name="address">Электронный адресс клиента</param>
-        /// <returns></returns>
-        public DataSet GetBook(int statusReading, string language, string name, string address)
+        /// <returns>Информация о книгах</returns>
+        public DataSet GetBook(FilterSDB filter, string address)
         {
-            DataSet ds = new DataSet();
+            DataSet dataSetBook = new DataSet();
+            Command = new MySqlCommand();
+            Filter = filter;
+            Address = address;
             string sqlWhere = "";
-            string sqlWherePr;
-            MySqlCommand command = new MySqlCommand();
-            //проверка статуса, при совпадении с 1 или 2 - добавляется в фильтр, при несовпадении в фильтр не добавляется
-            switch (statusReading)
-            {
-                case 1:
-                    sqlWhere = " DataReading IS NOT NULL";
-                    break;
-                case 2:
-                    sqlWhere = " DataReading IS NULL";
-                    break;
-                default:
-                    break;                   
-            }
-            //проверка языка, при совпадении - добавляется в фильтр, при несовпадении в фильтр не добавляется
-            foreach (string lang in listLanguage)
-            {
-                if (language == lang)
-                {
-                    sqlWherePr = " Language = @language";
-                    if (sqlWhere != "")
-                        sqlWhere = sqlWhere + " AND" + sqlWherePr;
-                    else
-                        sqlWhere = sqlWhere + sqlWherePr;
-                    MySqlParameter languageParam = new MySqlParameter("@language", language);
-                    command.Parameters.Add(languageParam);
-                }
-            }
-            //проверка названия книги, при пустом значении или NULL в фильтр не добавляется
-            if (name != "" && name != null)
-            {
-                sqlWherePr = " Name = @name";
-                if (sqlWhere != "")
-                    sqlWhere = sqlWhere + " AND" + sqlWherePr;
-                else
-                    sqlWhere = sqlWhere + sqlWherePr;
-                MySqlParameter nameParam = new MySqlParameter("@name", name);
-                command.Parameters.Add(nameParam);
-            }
-            // проверка адресса клиента, при пустом значении или NULL в фильтр не добавляется
-            if (address != "" && address != null)
-            {
-                sqlWherePr = " AddressClient = @address";
-                if (sqlWhere != "")
-                    sqlWhere = sqlWhere + " AND" + sqlWherePr;
-                else
-                    sqlWhere = sqlWhere + sqlWherePr;
-                MySqlParameter addressParam = new MySqlParameter("@address", address);
-                command.Parameters.Add(addressParam);
-            }
+            AddConditionBook(ref sqlWhere);
 
-            if (sqlWhere != "")
-                sqlWhere = " WHERE" + sqlWhere;
-            //запрос
-            command.CommandText = "SELECT * FROM books" + sqlWhere;
-            using (connection = new MySqlConnection(connectionString))
+            Command.CommandText = $"SELECT * FROM books{sqlWhere}";
+            try 
             {
-                connection.Open();
-                command.Connection = connection;
-                MySqlDataAdapter adapter = new MySqlDataAdapter(command);
-                adapter.Fill(ds);
+                ConnectionMySQL.Open();
+                Command.Connection = ConnectionMySQL;
+                MySqlDataAdapter adapter = new MySqlDataAdapter(Command);
+                adapter.Fill(dataSetBook);
             }
-            return ds;
+            finally
+            {
+                ConnectionMySQL.Close();
+            }
+            return dataSetBook;
         }
+
+        /// <summary>
+        /// Добавление условия по фильтру книг
+        /// </summary>
+        /// <param name="sqlWhere">Предыдущее условие</param>
+        private void AddConditionBook(ref string sqlWhere)
+        {
+            AddStatusReadingCondinion(ref sqlWhere, Filter.Status);
+            AddLanguagesCondinion(ref sqlWhere, "=", "Language", Filter.Language);
+            AddNameBookCondition(ref sqlWhere, "=", "Name", Filter.ClientBook);
+            AddAddressCondition(ref sqlWhere, "=", "AddressClient", Address);
+            AddStartPeriodCondition(ref sqlWhere, ">", "DataGetting", Filter.StartPeriod);
+        }
+
         /// <summary>
         /// Возвращает статистику клиента
         /// </summary>
-        /// <param name="statusSubscription">Статус подписки</param>
-        /// <param name="language">Язык</param>
-        /// <param name="address">Электронный адресс клиента</param>
-        /// <returns></returns>
-        public DataSet GetClientStatistics(string statusSubscription, string language, string address)
+        /// <param name="filter">Объект фильтра</param>
+        /// <returns>Статистика клиента</returns>
+        public DataSet GetClientStatistics(FilterSDB filter)
         {
-            DataSet ds = new DataSet();
-            string sqlWhereClient = "";
+            DataSet dataSetBook = new DataSet();
+            Command = new MySqlCommand();
+            Filter = filter;
             string sqlWhereBook = "";
-            string sqlWherePr;
-            MySqlCommand command = new MySqlCommand();
-            //проверка статуса, при совпадении с "Подписан" или "Отписан" - добавляется в фильтр, при несовпадении в фильтр не добавляется
-            if (statusSubscription == "Подписан" || statusSubscription == "Отписан")
-            {
-                sqlWhereClient = " c.Subscription = @subscription";
-                MySqlParameter subscriptionParam = new MySqlParameter("@subscription", statusSubscription);
-                command.Parameters.Add(subscriptionParam);
+            AddConditionClientStatisticsByBook(ref sqlWhereBook);
+            string sqlWhereClient = "";
+            AddConditionClientStatistics(ref sqlWhereClient);
+
+            Command.CommandText = "SELECT Address, COUNT(b.Name) AS CountBook, SUM(Pages) AS CountPages FROM " +
+                    "(SELECT DISTINCT Address FROM clients AS c " +
+                    "JOIN levellanguages AS ll " +
+                    "ON c.Address = ll.AddressClient" +
+                    $"{sqlWhereClient}) AS Addr " +
+                    "LEFT JOIN (SELECT * FROM books" +
+                    $"{sqlWhereBook}) AS b " +
+                    "ON Addr.Address = b.AddressClient " +
+                    "GROUP BY Address";
+            try 
+            { 
+                ConnectionMySQL.Open();
+                Command.Connection = ConnectionMySQL;
+                MySqlDataAdapter adapter = new MySqlDataAdapter(Command);
+                adapter.Fill(dataSetBook);
             }
-            //проверка языка, при совпадении - добавляется в фильтр, при несовпадении в фильтр не добавляется
+            finally
+            {
+                ConnectionMySQL.Close();
+            }
+            return dataSetBook;
+        }
+
+        /// <summary>
+        /// Добавление условия по фильтру клиентов для книг
+        /// </summary>
+        /// <param name="sqlWhereBook">Предыдущее условие</param>
+        private void AddConditionClientStatisticsByBook(ref string sqlWhereBook)
+        {
+            AddLanguagesCondinion(ref sqlWhereBook, "=", "Language", Filter.Language);
+            AddStartPeriodCondition(ref sqlWhereBook, ">", "DataGetting", Filter.StartPeriod);
+        }
+
+        /// <summary>
+        /// Добавление условия по фильтру клиентов
+        /// </summary>
+        /// <param name="sqlWhereClient">Предыдущее условие</param>
+        private void AddConditionClientStatistics(ref string sqlWhereClient)
+        {
+            AddSubscriptionCondition(ref sqlWhereClient, "=", "c.Subscription", Filter.Status);
+            AddLanguagesCondinion(ref sqlWhereClient, "=", "ll.Language", Filter.Language);
+            AddAddressCondition(ref sqlWhereClient, "=", "c.Address", Filter.ClientBook);
+        }
+
+        /// <summary>
+        /// Добавление условия на прочитанность книги
+        /// </summary>
+        /// <param name="sqlWhere">Предыдущее условие</param>
+        /// <param name="statusReading">Статус прочтения</param>
+        private void AddStatusReadingCondinion(ref string sqlWhere, string statusReading)
+        {
+            if (statusReading ==  ReadEnd|| statusReading == ReadNow)
+            {
+                string sqlConnectionWord = GetConnectionWord(sqlWhere);
+                string sqlStatusReadingCondition;
+                if (statusReading == ReadEnd)
+                {
+                    sqlStatusReadingCondition = " DataReading IS NOT NULL";
+                }
+                else
+                {
+                    sqlStatusReadingCondition = " DataReading IS NULL";
+                }
+                sqlWhere = $"{sqlWhere}{sqlConnectionWord}{sqlStatusReadingCondition}";
+            }
+        }
+
+        /// <summary>
+        /// Добавление условия на язык
+        /// </summary>
+        /// <param name="sqlWhere">Предыдущее условие</param>
+        /// <param name="command">Sql-комманда</param>
+        /// <param name="sqlColumn">Название столбца базы даных</param>
+        /// <param name="language">Язык</param>
+        private void AddLanguagesCondinion(ref string sqlWhere, string operation, string sqlColumn, string language)
+        {
             foreach (string lang in listLanguage)
             {
                 if (language == lang)
                 {
-                    sqlWherePr = " ll.Language = @language";
-                    if (sqlWhereClient != "")
-                        sqlWhereClient = sqlWhereClient + " AND" + sqlWherePr;
-                    else
-                        sqlWhereClient = sqlWhereClient + sqlWherePr;
-                    sqlWhereBook = " WHERE Language = @language";
-                    MySqlParameter languageParam = new MySqlParameter("@language", language);
-                    command.Parameters.Add(languageParam);
+                    GetFullCondition(ref sqlWhere, operation, sqlColumn, language);
                 }
             }
-            // проверка адресса клиента, при пустом значении или NULL в фильтр не добавляется
+        }
+
+        /// <summary>
+        /// Добавление условия на название книги
+        /// </summary>
+        /// <param name="sqlWhere">Предыдущее условие</param>
+        /// <param name="operation">Sql-комманда</param>
+        /// <param name="sqlColumn">Название столбца базы даных</param>
+        /// <param name="nameBook">Название книги</param>
+        private void AddNameBookCondition(ref string sqlWhere, string operation, string sqlColumn, string nameBook)
+        {
+            if (nameBook != "" && nameBook != null)
+            {
+                GetFullCondition(ref sqlWhere, operation, sqlColumn, nameBook);
+            }
+        }
+
+        /// <summary>
+        /// Добавление условия на электронный адресс клиента
+        /// </summary>
+        /// <param name="sqlWhere">Начальное условие</param>
+        /// <param name="operation">Sql-комманда</param>
+        /// <param name="sqlColumn">Название столбца базы даных</param>
+        /// <param name="address">Электронный адресс клиента</param>
+        private void AddAddressCondition(ref string sqlWhere, string operation, string sqlColumn, string address)
+        {
             if (address != "" && address != null)
             {
-                sqlWherePr = " c.Address = @address";
-                if (sqlWhereClient != "")
-                    sqlWhereClient = sqlWhereClient + " AND" + sqlWherePr;
-                else
-                    sqlWhereClient = sqlWhereClient + sqlWherePr;
-                MySqlParameter addressParam = new MySqlParameter("@address", address);
-                command.Parameters.Add(addressParam);
+                GetFullCondition(ref sqlWhere, operation, sqlColumn, address);
             }
+        }
 
-            if (sqlWhereClient != "")
-                sqlWhereClient = " WHERE" + sqlWhereClient;
-            //запрос
-            command.CommandText = "SELECT Address, COUNT(b.Name) AS CountBook, SUM(Pages) AS CountPages FROM " +
-                    "(SELECT DISTINCT Address FROM clients AS c " +
-                    "JOIN levellanguages AS ll " +
-                    "ON c.Address = ll.AddressClient " +
-                    sqlWhereClient + ") AS Addr " +
-                    "LEFT JOIN (SELECT * FROM books " +
-                    sqlWhereBook + ") AS b " +
-                    "ON Addr.Address = b.AddressClient " +
-                    "GROUP BY Address";
-            using (connection = new MySqlConnection(connectionString))
+        /// <summary>
+        /// Добавление условия на подписку клиента
+        /// </summary>
+        /// <param name="sqlWhere">Предыдущее условие</param>
+        /// <param name="operation">Sql-комманда</param>
+        /// <param name="sqlColumn">Название столбца базы даных</param>
+        /// <param name="subscription">Статус подписки клиента</param>
+        private void AddSubscriptionCondition(ref string sqlWhere, string operation, string sqlColumn, string subscription)
+        {
+            if (subscription == SubscriptionOn || subscription == SubscriptionOff)
             {
-                connection.Open();
-                command.Connection = connection;
-                MySqlDataAdapter adapter = new MySqlDataAdapter(command);
-                adapter.Fill(ds);
+                GetFullCondition(ref sqlWhere, operation, sqlColumn, subscription);
             }
-            return ds;
+        }
+
+        /// <summary>
+        /// Добавление условия на подписку клиента
+        /// </summary>
+        /// <param name="sqlWhere">Предыдущее условие</param>
+        /// <param name="operation">Sql-комманда</param>
+        /// <param name="sqlColumn">Название столбца базы даных</param>
+        /// <param name="startPeriod">Дата-время начала периода фильтрации</param>
+        private void AddStartPeriodCondition(ref string sqlWhere, string operation, string sqlColumn, DateTime? startPeriod)
+        {
+            if (startPeriod != null)
+            {
+                GetFullCondition(ref sqlWhere, operation, sqlColumn, startPeriod);
+            }
+        }
+
+        /// <summary>
+        /// Возвращение полного условия
+        /// </summary>
+        /// <param name="sqlWhere">Предыдущее условие</param>
+        /// <param name="operation">Операция сравнения</param>
+        /// <param name="sqlColumn">Название столбца базы даных, первый операнд</param>
+        /// <param name="value">Значение, второй операнд</param>
+        private void GetFullCondition(ref string sqlWhere, string operation, string sqlColumn, object value)
+        {
+            string sqlConnectionWord = GetConnectionWord(sqlWhere);
+            string sqlCondition = GetCondition(operation, sqlColumn, value);
+            sqlWhere = $"{sqlWhere}{sqlConnectionWord}{sqlCondition}";
+        }
+
+        /// <summary>
+        /// Взвращение условия
+        /// </summary>
+        /// <param name="operation">Операция сравнения</param>
+        /// <param name="sqlColumn">Название столбца базы даных, первый операнд</param>
+        /// <param name="value">Значение, второй операнд</param>
+        /// <returns></returns>
+        private string GetCondition(string operation, string sqlColumn, object value)
+        {
+            string parameter = $"@{sqlColumn}";
+            string equalCondition = $" {sqlColumn} {operation} {parameter}";
+            Command.Parameters.AddWithValue(parameter, value);
+            return equalCondition;
+        }
+
+        /// <summary>
+        /// Возвращение соединительного слова
+        /// </summary>
+        /// <param name="sqlWhere">Предыдущее условие</param>
+        /// <returns></returns>
+        private string GetConnectionWord(string sqlWhere)
+        {
+            string sqlConnectionWord;
+            if (sqlWhere == "" || sqlWhere == null)
+            {
+                sqlConnectionWord = " WHERE";
+            }
+            else
+            {
+                sqlConnectionWord = " AND";
+            }
+            return sqlConnectionWord;
         }
     }
 }

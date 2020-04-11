@@ -11,27 +11,31 @@ using WinFormSDB.WcfServiceSDB;
 
 namespace WinFormSDB
 {
-    public partial class formSDB : Form
+    /// <summary>
+    /// Форма SDB
+    /// </summary>
+    public partial class FormSDB : Form
     {
-        ServiceSDBClient serviceSDB;
-        string Language;
-        public formSDB()
+        /// <summary>
+        /// Объект управления действиями
+        /// </summary>
+        private ControlActions Control_Actions;
+
+        public FormSDB()
         {
             InitializeComponent();
 
-            //задание начальных значений
             cmbSearch.SelectedIndex = 0;
             cmbLanguage.SelectedIndex = 0;
-            SearchСhange();
-            //создание объекта-клиента службы wcf
-            serviceSDB = new ServiceSDBClient();
+            ChangeControlsOnClients();
+            Control_Actions = new ControlActions(this);
 
             //событие закрытия формы
-            this.FormClosed += (sender, e) => serviceSDB.Close();
+            this.FormClosed += (sender, e) => Control_Actions.CloseService();
             //событие выбора комбобокса "Поиск по"
-            cmbSearch.SelectedIndexChanged += (sender, e) => SearchСhange();
+            cmbSearch.SelectedIndexChanged += (sender, e) => СhangeControls();
             //событие нажатия кнопки "Поиск"
-            btnSearch.Click += Search;
+            btnSearch.Click += MainSearch;
             //событие нажатия кнопки "Информация о клиенте" в таблице "Статистика по клиентам"
             btnInfoClientCS.Click += SearchClient;
             //событие нажатия кнопки "Информация о книгах"
@@ -41,36 +45,106 @@ namespace WinFormSDB
             //событие нажатия кнопки "Статистика клиента"
             btnClientStatistics.Click += SearchStatisticsClient;
         }
+
+        /// <summary>
+        /// Поиск информации
+        /// </summary>
+        /// <param name="sender">Вызывающий объект</param>
+        /// <param name="e">Вспомогательный объект</param>
+        private void MainSearch(object sender, EventArgs e)
+        {
+            if (cmbSearch.Text == cmbSearch.Items[0].ToString())
+            {
+                MainSearchByClients();
+            }
+            else if (cmbSearch.Text == cmbSearch.Items[1].ToString())
+            {
+                MainSearchByBooks();
+            }
+        }
+
+        /// <summary>
+        /// Поиск информации по клиентам
+        /// </summary>
+        private void MainSearchByClients()
+        {
+            DataSet dataSet = Control_Actions.GetClientStatisticsByFilter();
+            if (dataSet != null)
+            {
+                ClearTables();
+                ChangeBunnonsBooksTable(false);
+                dgvClientsStatistics.DataSource = dataSet.Tables[0];
+                EditClientStatisticsTable();
+                ChangeBunnonsClientStatisticsTable(true);
+            }
+        }
+
+        /// <summary>
+        /// Поиск информации по книгам
+        /// </summary>
+        private void MainSearchByBooks()
+        {
+            DataSet dataSet = Control_Actions.GetBooksByFilter();
+            if (dataSet != null)
+            {
+                ClearTables();
+                ChangeBunnonsClientStatisticsTable(false);
+                dgvBooks.DataSource = dataSet.Tables[0];
+                EditBookTable();
+                ChangeBunnonsBooksTable(true);
+            }
+        }
+
         /// <summary>
         /// Поиск статистики клиента
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="sender">Вызывающий объект</param>
+        /// <param name="e">Вспомогательный объект</param>
         private void SearchStatisticsClient(object sender, EventArgs e)
         {
-            DataSet ds = new DataSet();
-            string address = dgvBooks.Rows[dgvBooks.CurrentCell.RowIndex].Cells["AddressClient"].Value.ToString();
-            ds = serviceSDB.GetClientStatistics("", Language, address);
-            dgvClientsStatistics.DataSource = ds.Tables[0];
-            ClientStatisticsTable();
+            DataSet dataSet = Control_Actions.GetClientStatisticsByBook();
+            if (dataSet != null)
+            {
+                dgvClientsStatistics.DataSource = dataSet.Tables[0];
+                EditClientStatisticsTable();
+            }
         }
         /// <summary>
         /// Поиск книг
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
+        /// <param name="sender">Вызывающий объект</param>
+        /// <param name="e">Вспомогательный объект</param>
         private void SearchBook(object sender, EventArgs e)
         {
-            DataSet ds = new DataSet();
-            string address = dgvClientsStatistics.Rows[dgvClientsStatistics.CurrentCell.RowIndex].Cells["Address"].Value.ToString();
-            ds = serviceSDB.GetBook(0, Language, "", address);
-            dgvBooks.DataSource = ds.Tables[0];
-            BookTable();
+            DataSet dataSet = Control_Actions.GetBooksByClient();
+            if (dataSet != null)
+            {
+                dgvBooks.DataSource = dataSet.Tables[0];
+                EditBookTable();
+            }
         }
+
         /// <summary>
-        /// Преобразование таблицы книг
+        /// Поиск информации по клиенту
         /// </summary>
-        private void BookTable()
+        /// <param name="sender">Вызывающий объект</param>
+        /// <param name="e">Вспомогательный объект</param>
+        private void SearchClient(object sender, EventArgs e)
+        {
+            DataSet dataSet = Control_Actions.GetClientInfo(sender);
+            if (dataSet != null)
+            {
+                dgvClientInfo.DataSource = dataSet.Tables[0];
+                EditClientInfoTable();
+                dgvLevelLanguage.DataSource = dataSet.Tables[1];
+                EditLevelLanguageTable();
+            }
+        }
+
+        /// <summary>
+        /// Редактирование таблицы книг
+        /// </summary>
+        private void EditBookTable()
         {
             dgvBooks.Columns[0].Width = 200;
             dgvBooks.Columns[0].HeaderText = "Адресс клиента";
@@ -83,21 +157,21 @@ namespace WinFormSDB
             dgvBooks.Columns[6].Visible = false;
         }
         /// <summary>
-        /// Поиск информации по клиенту
+        /// Редактирование таблицы статистики по клиентам
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SearchClient(object sender, EventArgs e)
+        private void EditClientStatisticsTable()
         {
-            DataSet ds = new DataSet();
-            string address;
-            //проверка с какой кнопки вызван метод
-            if (sender == btnInfoClientCS)
-                address = dgvClientsStatistics.Rows[dgvClientsStatistics.CurrentCell.RowIndex].Cells["Address"].Value.ToString();
-            else
-                address = dgvBooks.Rows[dgvBooks.CurrentCell.RowIndex].Cells["AddressClient"].Value.ToString();
-            ds = serviceSDB.GetClientInfo(address);
-            dgvClientInfo.DataSource = ds.Tables[0];
+            dgvClientsStatistics.Columns[0].Width = 200;
+            dgvClientsStatistics.Columns[0].HeaderText = "Адресс клиента";
+            dgvClientsStatistics.Columns[1].HeaderText = "Прочитано книг";
+            dgvClientsStatistics.Columns[2].HeaderText = "Прочитано страниц";
+        }
+
+        /// <summary>
+        /// Редактирование таблицы информации по клиенту
+        /// </summary>
+        private void EditClientInfoTable()
+        {
             dgvClientInfo.Columns[0].Width = 200;
             dgvClientInfo.Columns[0].HeaderText = "Адресс клиента";
             dgvClientInfo.Columns[1].HeaderText = "Фамилия";
@@ -108,88 +182,93 @@ namespace WinFormSDB
             dgvClientInfo.Columns[5].HeaderText = "Количество дней отдыха";
             dgvClientInfo.Columns[6].HeaderText = "Дата регистрации";
             dgvClientInfo.Columns[7].HeaderText = "Статус подписки";
-
-            dgvLabelLanguage.DataSource = ds.Tables[1];
-            dgvLabelLanguage.Columns[0].Visible = false;
-            dgvLabelLanguage.Columns[1].HeaderText = "Язык";
-            dgvLabelLanguage.Columns[2].Width = 120;
-            dgvLabelLanguage.Columns[2].HeaderText = "Уровень чтения (от 1 до 10)";
         }
+
         /// <summary>
-        /// Поиск в зависимости отвыброного поиска по клиентам или книгам
+        /// Редактирование таблицы языков клиента и уровней их владением
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Search(object sender, EventArgs e)
+        private void EditLevelLanguageTable()
         {
-            ///очистка таблиц
+            dgvLevelLanguage.Columns[0].Visible = false;
+            dgvLevelLanguage.Columns[1].HeaderText = "Язык";
+            dgvLevelLanguage.Columns[2].Width = 120;
+            dgvLevelLanguage.Columns[2].HeaderText = "Уровень чтения (от 1 до 10)";
+        }
+
+        /// <summary>
+        /// Изменение включения кнопок таблицы книг
+        /// </summary>
+        /// <param name="enabled">Включение: true-включить, false-выключить</param>
+        private void ChangeBunnonsBooksTable(bool enabled)
+        {
+            btnInfoClientB.Enabled = enabled;
+            btnClientStatistics.Enabled = enabled;
+        }
+
+        /// <summary>
+        /// Изменение включения кнопок таблицы статистики по клиентам
+        /// </summary>
+        /// <param name="enabled">Включение: true-включить, false-выключить</param>
+        private void ChangeBunnonsClientStatisticsTable(bool enabled)
+        {
+            btnInfoClientCS.Enabled = enabled;
+            btnInfoBooks.Enabled = enabled;
+        }
+
+        /// <summary>
+        /// Очистка таблиц
+        /// </summary>
+        private void ClearTables()
+        {
             dgvClientsStatistics.DataSource = null;
-            dgvLabelLanguage.DataSource = null;
+            dgvLevelLanguage.DataSource = null;
             dgvClientInfo.DataSource = null;
             dgvBooks.DataSource = null;
-            DataSet ds = new DataSet();
-            //поиск статистики по клиентам
-            if (cmbSearch.SelectedIndex == 0)
-            {
-                btnInfoClientB.Enabled = false;
-                btnClientStatistics.Enabled = false;
-                ds = serviceSDB.GetClientStatistics(cmbStatus.Text, cmbLanguage.Text, txbClientBook.Text);
-                dgvClientsStatistics.DataSource = ds.Tables[0];
-                ClientStatisticsTable();
-                Language = cmbLanguage.Text;
-                btnInfoBooks.Enabled = true;
-                btnInfoClientCS.Enabled = true;
-            }
-            //поиск книг
-            else if (cmbSearch.SelectedIndex == 1)
-            {
-                btnInfoBooks.Enabled = false;
-                btnInfoClientCS.Enabled = false;               
-                ds = serviceSDB.GetBook(cmbStatus.SelectedIndex, cmbLanguage.Text, txbClientBook.Text, "");
-                dgvBooks.DataSource = ds.Tables[0];
-                BookTable();
-                Language = cmbLanguage.Text;
-                btnInfoClientB.Enabled = true;
-                btnClientStatistics.Enabled = true;
-            }
         }
+
         /// <summary>
-        /// Преобразование таблицы статистики по клиентам
+        /// Изменение контролов
         /// </summary>
-        private void ClientStatisticsTable()
+        private void СhangeControls()
         {
-            dgvClientsStatistics.Columns[0].Width = 200;
-            dgvClientsStatistics.Columns[0].HeaderText = "Адресс клиента";
-            dgvClientsStatistics.Columns[1].HeaderText = "Прочитано книг";
-            dgvClientsStatistics.Columns[2].HeaderText = "Прочитано страниц";
-        }
-        /// <summary>
-        /// Изменение котролов в зависимости от поиска по клиентам или книгам
-        /// </summary>
-        private void SearchСhange()
-        {
-            if (cmbSearch.SelectedIndex == 0)
+            if (cmbSearch.Text == cmbSearch.Items[0].ToString())
             {
-                lblStatus.Text = "Статус подписки";
-                lblClientBook.Text = "Адресс клиента";
-                cmbStatus.Items.Clear();
-                cmbStatus.Items.AddRange(new object[] {
+                ChangeControlsOnClients();
+            }
+            else if (cmbSearch.Text == cmbSearch.Items[1].ToString())
+            {
+                ChangeControlsOnBooks();
+            }            
+        }
+
+        /// <summary>
+        /// Изменение контролов на поиск по клиентам
+        /// </summary>
+        private void ChangeControlsOnClients()
+        {
+            lblStatus.Text = "Статус подписки";
+            lblClientBook.Text = "Адресс клиента";
+            cmbStatus.Items.Clear();
+            cmbStatus.Items.AddRange(new object[] {
                                     "Все",
                                     "Подписан",
                                     "Отписан"});
-                cmbStatus.SelectedIndex = 0;
-            }
-            else if (cmbSearch.SelectedIndex == 1)
-            {
-                lblStatus.Text = "Статус чтения";
-                lblClientBook.Text = "Название книги";
-                cmbStatus.Items.Clear();
-                cmbStatus.Items.AddRange(new object[] {
+            cmbStatus.SelectedIndex = 0;
+        }
+
+        /// <summary>
+        /// Изменение контролов на поиск по книгам
+        /// </summary>
+        private void ChangeControlsOnBooks()
+        {
+            lblStatus.Text = "Статус чтения";
+            lblClientBook.Text = "Название книги";
+            cmbStatus.Items.Clear();
+            cmbStatus.Items.AddRange(new object[] {
                                     "Все",
                                     "Прочитана",
                                     "Читается"});
-                cmbStatus.SelectedIndex = 0;
-            }            
+            cmbStatus.SelectedIndex = 0;
         }
     }
 }

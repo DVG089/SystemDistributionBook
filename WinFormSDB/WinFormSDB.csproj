@@ -53,6 +53,13 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Reference.svcmap</DependentUpon>
     </Compile>
+    <Compile Include="ControlActions.cs" />
+    <Compile Include="FormError.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormError.Designer.cs">
+      <DependentUpon>FormError.cs</DependentUpon>
+    </Compile>
     <Compile Include="FormSDB.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -61,6 +68,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="FormError.resx">
+      <DependentUpon>FormError.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="FormSDB.resx">
       <DependentUpon>FormSDB.cs</DependentUpon>
     </EmbeddedResource>
@@ -83,6 +93,9 @@
     <None Include="Connected Services\WcfServiceSDB\ServiceSDB2.xsd">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Connected Services\WcfServiceSDB\ServiceSDB3.xsd">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\DataSources\System.Data.DataSet.datasource" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -96,6 +109,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="App.Debug.config">
+      <DependentUpon>App.config</DependentUpon>
+    </None>
+    <None Include="App.Release.config">
+      <DependentUpon>App.config</DependentUpon>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
@@ -119,4 +138,8 @@
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <UsingTask TaskName="TransformXml" AssemblyFile="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v16.0\Web\Microsoft.Web.Publishing.Tasks.dll" />
+  <Target Name="AfterBuild">
+    <TransformXml Source="App.config" Transform="App.$(Configuration).config" Destination="App.config" StackTrace="true" />
+  </Target>
 </Project>

@@ -1,4 +1,5 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,12 +41,16 @@ namespace SiteBook
         /// <summary>
         /// Дата регистрации подписки клиента
         /// </summary>
+        [BsonDateTimeOptions(Kind = DateTimeKind.Local)]
         public DateTime DataRegistration { get; set; }
         /// <summary>
         /// Языки и уровень владения
         /// </summary>
         public LevelLanguageSDB[] LevelLanguages { get; set; }
 
+        /// <summary>
+        /// Конструктор по умолчанию
+        /// </summary>
         public ClientSDB()
         {
         }
@@ -69,7 +74,7 @@ namespace SiteBook
             ReadingIntervalActive = readingIntervalActive;
             ReadingIntervalPassive = readingIntervalPassive;
             LevelLanguages = levelLanguages;
-            DataRegistration = DateTime.Now;
+            DataRegistration = DateTime.UtcNow.ToLocalTime();
         }
     }
 }

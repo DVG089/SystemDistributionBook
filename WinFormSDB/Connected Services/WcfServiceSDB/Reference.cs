@@ -9,7 +9,102 @@
 //------------------------------------------------------------------------------
 
 namespace WinFormSDB.WcfServiceSDB {
+    using System.Runtime.Serialization;
+    using System;
     
+    
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("System.Runtime.Serialization", "4.0.0.0")]
+    [System.Runtime.Serialization.DataContractAttribute(Name="FilterSDB", Namespace="http://schemas.datacontract.org/2004/07/WcfServiceSDB")]
+    [System.SerializableAttribute()]
+    public partial class FilterSDB : object, System.Runtime.Serialization.IExtensibleDataObject, System.ComponentModel.INotifyPropertyChanged {
+        
+        [System.NonSerializedAttribute()]
+        private System.Runtime.Serialization.ExtensionDataObject extensionDataField;
+        
+        [System.Runtime.Serialization.OptionalFieldAttribute()]
+        private string ClientBookField;
+        
+        [System.Runtime.Serialization.OptionalFieldAttribute()]
+        private string LanguageField;
+        
+        [System.Runtime.Serialization.OptionalFieldAttribute()]
+        private System.Nullable<System.DateTime> StartPeriodField;
+        
+        [System.Runtime.Serialization.OptionalFieldAttribute()]
+        private string StatusField;
+        
+        [global::System.ComponentModel.BrowsableAttribute(false)]
+        public System.Runtime.Serialization.ExtensionDataObject ExtensionData {
+            get {
+                return this.extensionDataField;
+            }
+            set {
+                this.extensionDataField = value;
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string ClientBook {
+            get {
+                return this.ClientBookField;
+            }
+            set {
+                if ((object.ReferenceEquals(this.ClientBookField, value) != true)) {
+                    this.ClientBookField = value;
+                    this.RaisePropertyChanged("ClientBook");
+                }
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Language {
+            get {
+                return this.LanguageField;
+            }
+            set {
+                if ((object.ReferenceEquals(this.LanguageField, value) != true)) {
+                    this.LanguageField = value;
+                    this.RaisePropertyChanged("Language");
+                }
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public System.Nullable<System.DateTime> StartPeriod {
+            get {
+                return this.StartPeriodField;
+            }
+            set {
+                if ((this.StartPeriodField.Equals(value) != true)) {
+                    this.StartPeriodField = value;
+                    this.RaisePropertyChanged("StartPeriod");
+                }
+            }
+        }
+        
+        [System.Runtime.Serialization.DataMemberAttribute()]
+        public string Status {
+            get {
+                return this.StatusField;
+            }
+            set {
+                if ((object.ReferenceEquals(this.StatusField, value) != true)) {
+                    this.StatusField = value;
+                    this.RaisePropertyChanged("Status");
+                }
+            }
+        }
+        
+        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+        
+        protected void RaisePropertyChanged(string propertyName) {
+            System.ComponentModel.PropertyChangedEventHandler propertyChanged = this.PropertyChanged;
+            if ((propertyChanged != null)) {
+                propertyChanged(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName));
+            }
+        }
+    }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
     [System.ServiceModel.ServiceContractAttribute(ConfigurationName="WcfServiceSDB.IServiceSDB")]
@@ -22,16 +117,16 @@ namespace WinFormSDB.WcfServiceSDB {
         System.Threading.Tasks.Task<System.Data.DataSet> GetClientInfoAsync(string address);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/IServiceSDB/GetBook", ReplyAction="http://tempuri.org/IServiceSDB/GetBookResponse")]
-        System.Data.DataSet GetBook(int statusReading, string language, string name, string address);
+        System.Data.DataSet GetBook(WinFormSDB.WcfServiceSDB.FilterSDB filter, string address);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/IServiceSDB/GetBook", ReplyAction="http://tempuri.org/IServiceSDB/GetBookResponse")]
-        System.Threading.Tasks.Task<System.Data.DataSet> GetBookAsync(int statusReading, string language, string name, string address);
+        System.Threading.Tasks.Task<System.Data.DataSet> GetBookAsync(WinFormSDB.WcfServiceSDB.FilterSDB filter, string address);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/IServiceSDB/GetClientStatistics", ReplyAction="http://tempuri.org/IServiceSDB/GetClientStatisticsResponse")]
-        System.Data.DataSet GetClientStatistics(string statusSubscription, string language, string address);
+        System.Data.DataSet GetClientStatistics(WinFormSDB.WcfServiceSDB.FilterSDB filter);
         
         [System.ServiceModel.OperationContractAttribute(Action="http://tempuri.org/IServiceSDB/GetClientStatistics", ReplyAction="http://tempuri.org/IServiceSDB/GetClientStatisticsResponse")]
-        System.Threading.Tasks.Task<System.Data.DataSet> GetClientStatisticsAsync(string statusSubscription, string language, string address);
+        System.Threading.Tasks.Task<System.Data.DataSet> GetClientStatisticsAsync(WinFormSDB.WcfServiceSDB.FilterSDB filter);
     }
     
     [System.CodeDom.Compiler.GeneratedCodeAttribute("System.ServiceModel", "4.0.0.0")]
@@ -69,20 +164,20 @@ namespace WinFormSDB.WcfServiceSDB {
             return base.Channel.GetClientInfoAsync(address);
         }
         
-        public System.Data.DataSet GetBook(int statusReading, string language, string name, string address) {
-            return base.Channel.GetBook(statusReading, language, name, address);
+        public System.Data.DataSet GetBook(WinFormSDB.WcfServiceSDB.FilterSDB filter, string address) {
+            return base.Channel.GetBook(filter, address);
         }
         
-        public System.Threading.Tasks.Task<System.Data.DataSet> GetBookAsync(int statusReading, string language, string name, string address) {
-            return base.Channel.GetBookAsync(statusReading, language, name, address);
+        public System.Threading.Tasks.Task<System.Data.DataSet> GetBookAsync(WinFormSDB.WcfServiceSDB.FilterSDB filter, string address) {
+            return base.Channel.GetBookAsync(filter, address);
         }
         
-        public System.Data.DataSet GetClientStatistics(string statusSubscription, string language, string address) {
-            return base.Channel.GetClientStatistics(statusSubscription, language, address);
+        public System.Data.DataSet GetClientStatistics(WinFormSDB.WcfServiceSDB.FilterSDB filter) {
+            return base.Channel.GetClientStatistics(filter);
         }
         
-        public System.Threading.Tasks.Task<System.Data.DataSet> GetClientStatisticsAsync(string statusSubscription, string language, string address) {
-            return base.Channel.GetClientStatisticsAsync(statusSubscription, language, address);
+        public System.Threading.Tasks.Task<System.Data.DataSet> GetClientStatisticsAsync(WinFormSDB.WcfServiceSDB.FilterSDB filter) {
+            return base.Channel.GetClientStatisticsAsync(filter);
         }
     }
 }

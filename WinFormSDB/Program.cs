@@ -16,7 +16,7 @@ namespace WinFormSDB
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new formSDB());
+            Application.Run(new FormSDB());
         }
     }
 }

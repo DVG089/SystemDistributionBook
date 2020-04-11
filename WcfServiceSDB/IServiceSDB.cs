@@ -17,8 +17,8 @@ namespace WcfServiceSDB
         [OperationContract]
         DataSet GetClientInfo(string address);
         [OperationContract]
-        DataSet GetBook(int statusReading, string language, string name, string address);
+        DataSet GetBook(FilterSDB filter, string address);
         [OperationContract]
-        DataSet GetClientStatistics(string statusSubscription, string language, string address);
+        DataSet GetClientStatistics(FilterSDB filter);
     }
 }

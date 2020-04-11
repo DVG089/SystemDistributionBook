@@ -25,6 +25,9 @@ namespace SiteBook
         /// </summary>
         public int Pages { get; set; }
 
+        /// <summary>
+        /// Конструктор по умолчанию
+        /// </summary>
         public BookSDB()
         {
         }

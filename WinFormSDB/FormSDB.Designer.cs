@@ -1,6 +1,6 @@
 ﻿namespace WinFormSDB
 {
-    partial class formSDB
+    partial class FormSDB
     {
         /// <summary>
         /// Обязательная переменная конструктора.
@@ -44,15 +44,18 @@
             this.lblInfoClient = new System.Windows.Forms.Label();
             this.dgvClientInfo = new System.Windows.Forms.DataGridView();
             this.lblLevelLanguage = new System.Windows.Forms.Label();
-            this.dgvLabelLanguage = new System.Windows.Forms.DataGridView();
+            this.dgvLevelLanguage = new System.Windows.Forms.DataGridView();
             this.lblBooks = new System.Windows.Forms.Label();
             this.dgvBooks = new System.Windows.Forms.DataGridView();
             this.btnClientStatistics = new System.Windows.Forms.Button();
             this.btnInfoClientB = new System.Windows.Forms.Button();
+            this.numPeriod = new System.Windows.Forms.NumericUpDown();
+            this.lblPeriod = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgvClientsStatistics)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvClientInfo)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvLabelLanguage)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvLevelLanguage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvBooks)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numPeriod)).BeginInit();
             this.SuspendLayout();
             // 
             // dgvClientsStatistics
@@ -157,7 +160,7 @@
             // 
             // btnSearch
             // 
-            this.btnSearch.Location = new System.Drawing.Point(667, 22);
+            this.btnSearch.Location = new System.Drawing.Point(822, 23);
             this.btnSearch.Name = "btnSearch";
             this.btnSearch.Size = new System.Drawing.Size(75, 23);
             this.btnSearch.TabIndex = 9;
@@ -224,18 +227,18 @@
             this.lblLevelLanguage.TabIndex = 15;
             this.lblLevelLanguage.Text = "Информация о владеемых языках";
             // 
-            // dgvLabelLanguage
+            // dgvLevelLanguage
             // 
-            this.dgvLabelLanguage.AllowUserToAddRows = false;
-            this.dgvLabelLanguage.AllowUserToDeleteRows = false;
-            this.dgvLabelLanguage.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvLabelLanguage.Location = new System.Drawing.Point(15, 526);
-            this.dgvLabelLanguage.Name = "dgvLabelLanguage";
-            this.dgvLabelLanguage.ReadOnly = true;
-            this.dgvLabelLanguage.RowHeadersVisible = false;
-            this.dgvLabelLanguage.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvLabelLanguage.Size = new System.Drawing.Size(223, 143);
-            this.dgvLabelLanguage.TabIndex = 16;
+            this.dgvLevelLanguage.AllowUserToAddRows = false;
+            this.dgvLevelLanguage.AllowUserToDeleteRows = false;
+            this.dgvLevelLanguage.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvLevelLanguage.Location = new System.Drawing.Point(15, 526);
+            this.dgvLevelLanguage.Name = "dgvLevelLanguage";
+            this.dgvLevelLanguage.ReadOnly = true;
+            this.dgvLevelLanguage.RowHeadersVisible = false;
+            this.dgvLevelLanguage.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvLevelLanguage.Size = new System.Drawing.Size(223, 143);
+            this.dgvLevelLanguage.TabIndex = 16;
             // 
             // lblBooks
             // 
@@ -279,17 +282,41 @@
             this.btnInfoClientB.Text = "Информация о клиенте";
             this.btnInfoClientB.UseVisualStyleBackColor = true;
             // 
-            // formSDB
+            // numPeriod
+            // 
+            this.numPeriod.BackColor = System.Drawing.SystemColors.Info;
+            this.numPeriod.Location = new System.Drawing.Point(677, 25);
+            this.numPeriod.Maximum = new decimal(new int[] {
+            999,
+            0,
+            0,
+            0});
+            this.numPeriod.Name = "numPeriod";
+            this.numPeriod.Size = new System.Drawing.Size(120, 20);
+            this.numPeriod.TabIndex = 21;
+            // 
+            // lblPeriod
+            // 
+            this.lblPeriod.AutoSize = true;
+            this.lblPeriod.Location = new System.Drawing.Point(676, 9);
+            this.lblPeriod.Name = "lblPeriod";
+            this.lblPeriod.Size = new System.Drawing.Size(144, 13);
+            this.lblPeriod.TabIndex = 22;
+            this.lblPeriod.Text = "Временной период (в днях)";
+            // 
+            // FormSDB
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ScrollBar;
             this.ClientSize = new System.Drawing.Size(1153, 674);
+            this.Controls.Add(this.lblPeriod);
+            this.Controls.Add(this.numPeriod);
             this.Controls.Add(this.btnClientStatistics);
             this.Controls.Add(this.btnInfoClientB);
             this.Controls.Add(this.dgvBooks);
             this.Controls.Add(this.lblBooks);
-            this.Controls.Add(this.dgvLabelLanguage);
+            this.Controls.Add(this.dgvLevelLanguage);
             this.Controls.Add(this.lblLevelLanguage);
             this.Controls.Add(this.dgvClientInfo);
             this.Controls.Add(this.lblInfoClient);
@@ -306,41 +333,43 @@
             this.Controls.Add(this.lblSearch);
             this.Controls.Add(this.cmbSearch);
             this.Controls.Add(this.dgvClientsStatistics);
-            this.Name = "formSDB";
+            this.Name = "FormSDB";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "SDB";
             ((System.ComponentModel.ISupportInitialize)(this.dgvClientsStatistics)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvClientInfo)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvLabelLanguage)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvLevelLanguage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvBooks)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numPeriod)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
         }
 
         #endregion
-
-        private System.Windows.Forms.DataGridView dgvClientsStatistics;
         private System.Windows.Forms.ComboBox cmbSearch;
         private System.Windows.Forms.Label lblSearch;
         private System.Windows.Forms.Label lblStatus;
-        private System.Windows.Forms.ComboBox cmbStatus;
         private System.Windows.Forms.Label lblLanguage;
-        private System.Windows.Forms.ComboBox cmbLanguage;
         private System.Windows.Forms.Label lblClientBook;
-        private System.Windows.Forms.TextBox txbClientBook;
         private System.Windows.Forms.Button btnSearch;
         private System.Windows.Forms.Label lblClientsStatistics;
-        private System.Windows.Forms.Button btnInfoClientCS;
         private System.Windows.Forms.Button btnInfoBooks;
         private System.Windows.Forms.Label lblInfoClient;
         private System.Windows.Forms.DataGridView dgvClientInfo;
         private System.Windows.Forms.Label lblLevelLanguage;
-        private System.Windows.Forms.DataGridView dgvLabelLanguage;
+        private System.Windows.Forms.DataGridView dgvLevelLanguage;
         private System.Windows.Forms.Label lblBooks;
-        private System.Windows.Forms.DataGridView dgvBooks;
         private System.Windows.Forms.Button btnClientStatistics;
-        private System.Windows.Forms.Button btnInfoClientB;
+        public System.Windows.Forms.ComboBox cmbStatus;
+        public System.Windows.Forms.ComboBox cmbLanguage;
+        public System.Windows.Forms.TextBox txbClientBook;
+        public System.Windows.Forms.DataGridView dgvBooks;
+        public System.Windows.Forms.DataGridView dgvClientsStatistics;
+        public System.Windows.Forms.Button btnInfoClientCS;
+        public System.Windows.Forms.Button btnInfoClientB;
+        private System.Windows.Forms.Label lblPeriod;
+        public System.Windows.Forms.NumericUpDown numPeriod;
     }
 }
 
