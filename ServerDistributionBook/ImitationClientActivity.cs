@@ -1,4 +1,5 @@
-﻿using SiteBook;
+﻿using NLog;
+using SiteBook;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,15 +34,19 @@ namespace ServerDistributionBook
         /// <summary>
         /// Объект работы с MySQL
         /// </summary>
-        private MySQL_SDB MySQL_Connection;
+        private MySqlSDB MySqlConnection;
         /// <summary>
         /// Объект работы с MongoDB
         /// </summary>
-        private MongoDB_SDB Mongo_Connection;
+        private MongoDbSDB MongoConnection;
         /// <summary>
         /// Объект блокировки потока до получения сигнала
         /// </summary>
         private AutoResetEvent WaitHandler;
+        /// <summary>
+        /// Журнал сообщений Nlog
+        /// </summary>
+        private static Logger Log = LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// Конструктор объекта имитации деятельности клиента
@@ -54,9 +59,9 @@ namespace ServerDistributionBook
             ClientServer = clientServer;
             ImitationActivity = new Thread(new ThreadStart(GettingAndReadingBook));
             MutexJointOperation = new Mutex();
-            MySQL_Connection = new MySQL_SDB();
-            Mongo_Connection = new MongoDB_SDB();
-            WaitHandler = new AutoResetEvent(false);
+            MySqlConnection = new MySqlSDB(ServerDB);
+            MongoConnection = new MongoDbSDB(ServerDB);
+            WaitHandler = new AutoResetEvent(true);
         }
 
         /// <summary>
@@ -68,19 +73,18 @@ namespace ServerDistributionBook
             {
                 TryGettingAndReadingBook();               
             }
-            catch (MySql.Data.MySqlClient.MySqlException)
-            {
-                string executionResult = "Ошибка связи с MySQL";
-                ServerDB.StopServer(executionResult);
-            }
             catch (Exception exception)
             {
-                ServerDB.StopServer(exception.Message);
+                if (!ControlServerDB.CheckException(exception))
+                {
+                    Log.Error(exception.ToString);
+                }
+                ServerDB.StopServer();
             }
         }
 
         /// <summary>
-        /// Получение и чтение книг клиентом без обработки исключений
+        /// Получение и чтение книг клиентом без обработки общих исключений
         /// </summary>
         private void TryGettingAndReadingBook()
         {
@@ -90,6 +94,7 @@ namespace ServerDistributionBook
             {
                 if (ClientServer.QueueBook.Count == 0)
                 {
+                    WaitHandler.Reset();
                     WaitHandler.WaitOne();
                 }
 
@@ -102,7 +107,7 @@ namespace ServerDistributionBook
                 MutexJointOperation.ReleaseMutex();
 
                 Thread.Sleep((int)timeSleep * MilisecondOfSecond);
-                MySQL_Connection.ImplementationBook(ClientServer.Address, DateTime.UtcNow.ToLocalTime());
+                MySqlConnection.ImplementationBook(ClientServer.Address, DateTime.UtcNow.ToLocalTime());
             }
         }
 
@@ -111,7 +116,7 @@ namespace ServerDistributionBook
         /// </summary>
         private void ReadingActiveBook()
         {
-            object idBook = MySQL_Connection.GetIdUnreadBook(ClientServer.Address);
+            object idBook = MySqlConnection.GetIdUnreadBook(ClientServer.Address);
             if (idBook != null)
             {
                 DateTime dataReading = ClientServer.TimeReadActive;
@@ -121,7 +126,7 @@ namespace ServerDistributionBook
                     Thread.Sleep(timeSleepActive);
                     dataReading = DateTime.UtcNow.ToLocalTime();
                 }
-                MySQL_Connection.AddDataReadingBook(idBook, dataReading);
+                MySqlConnection.AddDataReadingBook(idBook, dataReading);
             }
         }
 
@@ -133,16 +138,15 @@ namespace ServerDistributionBook
         private void SendBookClient(string bookJSON, DateTime timeCompleteReadActive)
         {
             ClientServer.TimeReadActive = timeCompleteReadActive;
-            MySQL_Connection.AddBook(ClientServer.Address, bookJSON, DateTime.UtcNow.ToLocalTime());
+            MySqlConnection.AddBook(ClientServer.Address, bookJSON, DateTime.UtcNow.ToLocalTime());
             try
             {
-                Mongo_Connection.ImplementationBook(ClientServer.Address, timeCompleteReadActive);
+                MongoConnection.ImplementationBook(ClientServer.Address, timeCompleteReadActive);
             }
-            catch (MongoDB.Driver.MongoConnectionException)
+            catch (MongoException)
             {
-                MySQL_Connection.DeleteLastBook(ClientServer.Address);
-                string executionResult = "Ошибка соединения с MongoDB";
-                ServerDB.StopServer(executionResult);
+                MySqlConnection.DeleteLastBook(ClientServer.Address);
+                ServerDB.StopServer();
             }
         }
 

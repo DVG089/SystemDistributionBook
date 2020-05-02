@@ -1,4 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
+using NLog;
 using SiteBook;
 using System;
 using System.Collections.Generic;
@@ -13,23 +14,37 @@ namespace ServerDistributionBook
     /// <summary>
     /// Класс работы с MySQL
     /// </summary>
-    internal class MySQL_SDB: IClientAvailability, IOperationSDBDataBase
+    internal class MySqlSDB: IClientAvailability, IOperationSDBDataBase
     {
         /// <summary>
         /// Соединение с MySQL
         /// </summary>
         private MySqlConnection ConnectionMySQL;
+        /// <summary>
+        /// Журнал сообщений Nlog
+        /// </summary>
+        private static Logger Log = LogManager.GetCurrentClassLogger();
+        /// <summary>
+        /// Объект управления сервером
+        /// </summary>
+        private ControlServerDB ServerDB;
 
         /// <summary>
         /// Конструктор объекта работы с MySQL
         /// </summary>
-        public MySQL_SDB()
+        public MySqlSDB(ControlServerDB serverDB)
         {
+            ServerDB = serverDB;
             string connectionString = ConfigurationManager.ConnectionStrings["MySQL"].ConnectionString;
             ConnectionMySQL = new MySqlConnection(connectionString);
             try
             {
                 ConnectionMySQL.Open();
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
             }
             finally
             {
@@ -45,7 +60,7 @@ namespace ServerDistributionBook
         public bool ClientAvailability(string address)
         {
             string sqlCommand = "SELECT Address FROM clients WHERE Address = @Address";
-            bool hasRows;
+            bool hasRows = false;
             try
             {
                 ConnectionMySQL.Open();
@@ -53,6 +68,11 @@ namespace ServerDistributionBook
                 commandChek.Parameters.AddWithValue("@Address", address);
                 MySqlDataReader reader = commandChek.ExecuteReader();
                 hasRows = reader.HasRows;
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
             }
             finally
             {
@@ -95,6 +115,11 @@ namespace ServerDistributionBook
                 command.Parameters.AddWithValue("@Subscription", "Подписан");
                 command.ExecuteNonQuery();
             }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                throw new MySqlException();
+            }
             finally
             {
                 ConnectionMySQL.Close();
@@ -130,6 +155,11 @@ namespace ServerDistributionBook
                 command.Parameters.AddWithValue("@Language", (int)ll.Language);
                 command.Parameters.AddWithValue("@Level", ll.Level);
                 command.ExecuteNonQuery();
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                throw new MySqlException();
             }
             finally
             {
@@ -172,6 +202,11 @@ namespace ServerDistributionBook
                 command.Parameters.AddWithValue("@Subscription", subscriptionValue);
                 command.ExecuteNonQuery();
             }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                throw new MySqlException();
+            }
             finally
             {
                 ConnectionMySQL.Close();
@@ -199,6 +234,11 @@ namespace ServerDistributionBook
                 command.Parameters.AddWithValue("@Pages", bookObject.Pages);
                 command.Parameters.AddWithValue("@DataGetting", dataGetting);
                 command.ExecuteNonQuery();
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
             }
             finally
             {
@@ -236,6 +276,11 @@ namespace ServerDistributionBook
                 Command.Parameters.AddWithValue("@Id", idBook);
                 Command.ExecuteNonQuery();
             }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
+            }
             finally
             {
                 ConnectionMySQL.Close();
@@ -270,6 +315,11 @@ namespace ServerDistributionBook
                 Command.Parameters.AddWithValue("@Address", address);
                 idBook = Command.ExecuteScalar();
             }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
+            }
             finally
             {
                 ConnectionMySQL.Close();
@@ -291,6 +341,11 @@ namespace ServerDistributionBook
                 command.Parameters.AddWithValue("@IdBook", idBook);
                 command.ExecuteNonQuery();
             }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
+            }
             finally
             {
                 ConnectionMySQL.Close();
@@ -311,10 +366,24 @@ namespace ServerDistributionBook
                 command.Parameters.AddWithValue("@Address", address);
                 command.ExecuteNonQuery();
             }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
+            }
             finally
             {
                 ConnectionMySQL.Close();
             }
+        }
+
+        /// <summary>
+        /// Завершение приложения
+        /// </summary>
+        public void StopApplication()
+        {
+            ConnectionMySQL.Close();
+            ServerDB.StopServer();
         }
     }
 }

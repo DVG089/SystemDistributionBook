@@ -68,6 +68,9 @@
     <Reference Include="MySql.Data, Version=8.0.19.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\packages\MySql.Data.8.0.19\lib\net452\MySql.Data.dll</HintPath>
     </Reference>
+    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
+      <HintPath>..\packages\NLog.4.7.0\lib\net45\NLog.dll</HintPath>
+    </Reference>
     <Reference Include="RabbitMQ.Client, Version=5.0.0.0, Culture=neutral, PublicKeyToken=89e7d7c5feba84ce, processorArchitecture=MSIL">
       <HintPath>..\packages\RabbitMQ.Client.5.1.2\lib\net451\RabbitMQ.Client.dll</HintPath>
     </Reference>
@@ -91,6 +94,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Drawing.Design" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Management" />
     <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.3\lib\netstandard2.0\System.Memory.dll</HintPath>
@@ -107,6 +111,8 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Text.Encodings.Web, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Text.Encodings.Web.4.7.0\lib\netstandard2.0\System.Text.Encodings.Web.dll</HintPath>
     </Reference>
@@ -138,11 +144,13 @@
     <Compile Include="GroupImitationClientActivity.cs" />
     <Compile Include="IOperationSDB.cs" />
     <Compile Include="IOperationSDBDataBase.cs" />
-    <Compile Include="MongoDB_SDB.cs" />
-    <Compile Include="MySQL_SDB.cs" />
+    <Compile Include="MongoDbSDB.cs" />
+    <Compile Include="MongoException.cs" />
+    <Compile Include="MySqlException.cs" />
+    <Compile Include="MySqlSDB.cs" />
     <Compile Include="ProgramServer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RabbitMQ_SDB.cs" />
+    <Compile Include="RabbitmqSDB.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -151,6 +159,12 @@
     </None>
     <None Include="App.Release.config">
       <DependentUpon>App.config</DependentUpon>
+    </None>
+    <Content Include="NLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="NLog.xsd">
+      <SubType>Designer</SubType>
     </None>
     <None Include="packages.config" />
   </ItemGroup>
@@ -168,7 +182,7 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\MongoDB.Libmongocrypt.1.0.0\build\MongoDB.Libmongocrypt.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MongoDB.Libmongocrypt.1.0.0\build\MongoDB.Libmongocrypt.targets'))" />
   </Target>
-  <UsingTask TaskName="TransformXml" AssemblyFile="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v16.0\Web\Microsoft.Web.Publishing.Tasks.dll" />
+  <UsingTask TaskName="TransformXml" AssemblyFile="libraries\Microsoft.Web.Publishing.Tasks.dll" />
   <Target Name="AfterBuild">
     <TransformXml Source="App.config" Transform="App.$(Configuration).config" Destination="App.config" StackTrace="true" />
   </Target>

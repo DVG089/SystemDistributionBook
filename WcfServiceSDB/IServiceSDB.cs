@@ -19,6 +19,7 @@ namespace WcfServiceSDB
         [OperationContract]
         DataSet GetBook(FilterSDB filter, string address);
         [OperationContract]
+        [FaultContract(typeof(MySqlException))]
         DataSet GetClientStatistics(FilterSDB filter);
     }
 }

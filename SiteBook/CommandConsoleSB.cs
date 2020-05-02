@@ -17,7 +17,7 @@ namespace SiteBook
         /// <summary>
         /// Объект работы с RabbitMQ
         /// </summary>
-        private RabbitMQ_SB WorkRabbit;
+        private RabbitmqSB WorkRabbit;
         /// <summary>
         /// Объект класса случайной генерации книг
         /// </summary>
@@ -61,7 +61,7 @@ namespace SiteBook
         /// </summary>
         public CommandConsoleSB()
         {
-            WorkRabbit = new RabbitMQ_SB();
+            WorkRabbit = new RabbitmqSB();
             CommandAddingBooks = new KeyValuePair<string, string>("1", "Запуск добавления книг");
             CommandAddingClient = new KeyValuePair<string, string>("2", "Добавление клиента");
             CommandDeletedClient = new KeyValuePair<string, string>("3", "Удаление клиента");
@@ -413,25 +413,10 @@ namespace SiteBook
         /// <summary>
         /// Остановка комманд консоли
         /// </summary>
-        /// <param name="executionResult">Результат выполнения</param>
-        public void StopConsole(string executionResult)
+        public void StopConsole()
         {
             WorkRabbit.Dispose();
-            WriteExecutionResult(executionResult);
             Environment.Exit(0);
-        }
-
-        /// <summary>
-        /// Запись результата выполнения в журнал
-        /// </summary>
-        /// <param name="executionResult">Результат выполнения</param>
-        public static void WriteExecutionResult(string executionResult)
-        {
-            string path = @"ExecutionResultLog.txt";
-            using (StreamWriter Writer = new StreamWriter(path, true, System.Text.Encoding.Default))
-            {
-                Writer.WriteLine($"{DateTime.UtcNow.ToLocalTime()} {executionResult}");
-            }
         }
     }
 }

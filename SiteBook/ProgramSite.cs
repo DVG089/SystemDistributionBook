@@ -9,41 +9,37 @@ using System.Text.RegularExpressions;
 using RabbitMQ.Client;
 using RabbitMQ.Client.MessagePatterns;
 using RabbitMQ.Client.Events;
+using NLog;
 
 namespace SiteBook
 {
     class ProgramSite
     {
+        /// <summary>
+        /// Журнал сообщений Nlog
+        /// </summary>
+        private static Logger Log = LogManager.GetCurrentClassLogger();
+
         static void Main(string[] args)
         {
-            string executionResult = "Успешно завершено";
             CommandConsoleSB commandConsole = null;
             try
             {
                 commandConsole = new CommandConsoleSB();
                 commandConsole.ExecutionCommand();
             }
-            catch (RabbitMQ.Client.Exceptions.BrokerUnreachableException)
-            {
-                executionResult = "Ошибка соединения с RabbitMQ";
-            }
-            catch (System.IO.IOException)
-            {
-                executionResult = "Ошибка соединения с RabbitMQ";
-            }
             catch (Exception exception)
             {
-                executionResult = exception.Message;
+                Log.Error(exception.ToString);
             }
             finally
             {
                 if (commandConsole != null)
                 {
-                    commandConsole.StopConsole(executionResult);
+                    commandConsole.StopConsole();
                 }
                 else
                 {
-                    CommandConsoleSB.WriteExecutionResult(executionResult);
                     Environment.Exit(0);
                 }
             }

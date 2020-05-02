@@ -19,7 +19,7 @@ namespace WinFormSDB
         /// <summary>
         /// Объект управления действиями
         /// </summary>
-        private ControlActions Control_Actions;
+        private ControlActions Control;
 
         public FormSDB()
         {
@@ -28,10 +28,10 @@ namespace WinFormSDB
             cmbSearch.SelectedIndex = 0;
             cmbLanguage.SelectedIndex = 0;
             ChangeControlsOnClients();
-            Control_Actions = new ControlActions(this);
+            Control = new ControlActions(this);
 
             //событие закрытия формы
-            this.FormClosed += (sender, e) => Control_Actions.CloseService();
+            this.FormClosed += (sender, e) => Control.CloseService();
             //событие выбора комбобокса "Поиск по"
             cmbSearch.SelectedIndexChanged += (sender, e) => СhangeControls();
             //событие нажатия кнопки "Поиск"
@@ -68,7 +68,7 @@ namespace WinFormSDB
         /// </summary>
         private void MainSearchByClients()
         {
-            DataSet dataSet = Control_Actions.GetClientStatisticsByFilter();
+            DataSet dataSet = Control.GetClientStatisticsByFilter();
             if (dataSet != null)
             {
                 ClearTables();
@@ -84,7 +84,7 @@ namespace WinFormSDB
         /// </summary>
         private void MainSearchByBooks()
         {
-            DataSet dataSet = Control_Actions.GetBooksByFilter();
+            DataSet dataSet = Control.GetBooksByFilter();
             if (dataSet != null)
             {
                 ClearTables();
@@ -102,7 +102,7 @@ namespace WinFormSDB
         /// <param name="e">Вспомогательный объект</param>
         private void SearchStatisticsClient(object sender, EventArgs e)
         {
-            DataSet dataSet = Control_Actions.GetClientStatisticsByBook();
+            DataSet dataSet = Control.GetClientStatisticsByBook();
             if (dataSet != null)
             {
                 dgvClientsStatistics.DataSource = dataSet.Tables[0];
@@ -116,7 +116,7 @@ namespace WinFormSDB
         /// <param name="e">Вспомогательный объект</param>
         private void SearchBook(object sender, EventArgs e)
         {
-            DataSet dataSet = Control_Actions.GetBooksByClient();
+            DataSet dataSet = Control.GetBooksByClient();
             if (dataSet != null)
             {
                 dgvBooks.DataSource = dataSet.Tables[0];
@@ -131,7 +131,7 @@ namespace WinFormSDB
         /// <param name="e">Вспомогательный объект</param>
         private void SearchClient(object sender, EventArgs e)
         {
-            DataSet dataSet = Control_Actions.GetClientInfo(sender);
+            DataSet dataSet = Control.GetClientInfo(sender);
             if (dataSet != null)
             {
                 dgvClientInfo.DataSource = dataSet.Tables[0];

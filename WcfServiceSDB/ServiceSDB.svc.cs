@@ -8,6 +8,7 @@ using System.Text;
 using System.Data;
 using MySql.Data.MySqlClient;
 using System.Configuration;
+using NLog;
 
 namespace WcfServiceSDB
 {
@@ -16,39 +17,43 @@ namespace WcfServiceSDB
         /// <summary>
         /// Соединение с MySQL
         /// </summary>
-        private MySqlConnection ConnectionMySQL;
+        private MySqlConnection ConnectionMySQL { get; set; }
         /// <summary>
         /// Команда MySQL
         /// </summary>
-        private MySqlCommand Command;
+        private MySqlCommand Command { get; set; }
         /// <summary>
         /// Объект фильтра
         /// </summary>
-        private FilterSDB Filter;
+        private FilterSDB Filter { get; set; }
+        /// <summary>
+        /// Журнал сообщений Nlog
+        /// </summary>
+        private static Logger Log = LogManager.GetCurrentClassLogger();
         /// <summary>
         /// Электронный адресс клиента
         /// </summary>
-        private string Address;
+        private string Address { get; set; }
         /// <summary>
         /// Список используемых языков
         /// </summary>
-        private List<string> listLanguage;
+        private List<string> listLanguage { get; set; }
         /// <summary>
         /// Статус чтения книги:Прочитана
         /// </summary>
-        private string ReadEnd;
+        private string ReadEnd { get; set; }
         /// <summary>
         /// Статус чтения книги:Читается
         /// </summary>
-        private string ReadNow;
+        private string ReadNow { get; set; }
         /// <summary>
         /// Статус подписки:Подписан
         /// </summary>
-        private string SubscriptionOn;
+        private string SubscriptionOn { get; set; }
         /// <summary>
         /// Статус подписки:Отписан
         /// </summary>
-        private string SubscriptionOff;
+        private string SubscriptionOff { get; set; }
 
         /// <summary>
         /// Конструтор объекта
@@ -95,6 +100,11 @@ namespace WcfServiceSDB
                     MySqlDataAdapter adapter = new MySqlDataAdapter(Command);
                     adapter.Fill(dataSetClient.Tables[i]);
                 }
+                catch (Exception e)
+                {
+                    Log.Error(e.ToString);
+                    throw new FaultException<MySqlException>(new MySqlException());
+                }
                 finally
                 {
                     ConnectionMySQL.Close();
@@ -124,6 +134,11 @@ namespace WcfServiceSDB
                 Command.Connection = ConnectionMySQL;
                 MySqlDataAdapter adapter = new MySqlDataAdapter(Command);
                 adapter.Fill(dataSetBook);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.ToString);
+                throw new FaultException<MySqlException>(new MySqlException());
             }
             finally
             {
@@ -175,6 +190,11 @@ namespace WcfServiceSDB
                 Command.Connection = ConnectionMySQL;
                 MySqlDataAdapter adapter = new MySqlDataAdapter(Command);
                 adapter.Fill(dataSetBook);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.ToString);
+                throw new FaultException<MySqlException>(new MySqlException());
             }
             finally
             {

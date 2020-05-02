@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,9 +10,13 @@ namespace ServerDistributionBook
 {
     class ProgramServer
     {
+        /// <summary>
+        /// Журнал сообщений Nlog
+        /// </summary>
+        private static Logger Log = LogManager.GetCurrentClassLogger();
+
         static void Main(string[] args)
         {
-            string executionResult = "Успешно завершено";
             ControlServerDB serverDB = null;
             try
             {
@@ -26,40 +31,21 @@ namespace ServerDistributionBook
                 Console.WriteLine("Сервер запущен. Нажмите любую клавишу для заершения работы.");
                 Console.ReadKey();
             }
-
-            catch (System.TimeoutException)
-            {
-                executionResult = "Ошибка соединения с MongoDB";
-            }
-            catch (MongoDB.Driver.MongoConnectionException)
-            {
-                executionResult = "Ошибка соединения с MongoDB";
-            }
-            catch (MySql.Data.MySqlClient.MySqlException)
-            {
-                executionResult = "Ошибка соединения с MySQL";
-            }
-            catch (RabbitMQ.Client.Exceptions.BrokerUnreachableException)
-            {
-                executionResult = "Ошибка соединения с RabbitMQ";
-            }
-            catch (System.IO.IOException)
-            {
-                executionResult = "Ошибка соединения с RabbitMQ";
-            }
             catch (Exception exception)
             {
-                executionResult = exception.Message;
+                if (!ControlServerDB.CheckException(exception))
+                {
+                    Log.Error(exception.ToString);
+                }
             }
             finally
             {
                 if (serverDB != null)
                 {
-                    serverDB.StopServer(executionResult);
+                    serverDB.StopServer();
                 }
                 else
                 {
-                    ControlServerDB.WriteExecutionResult(executionResult);
                     Environment.Exit(0);
                 }
             }

@@ -31,6 +31,20 @@ namespace ServerDistributionBook
         }
 
         /// <summary>
+        /// Проверка наличия клиентов
+        /// </summary>
+        /// <returns>Наличие клиентов</returns>
+        public bool ClientsAvailability()
+        {
+            bool availability = false;
+            if (ClientDictionary.Count > 0)
+            {
+                availability = true;
+            }
+            return availability;
+        }
+
+        /// <summary>
         /// Проверка наличия клиента
         /// </summary>
         /// <param name="address">Электронный адресс клиента</param>

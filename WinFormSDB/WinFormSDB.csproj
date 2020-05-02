@@ -138,7 +138,7 @@
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <UsingTask TaskName="TransformXml" AssemblyFile="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v16.0\Web\Microsoft.Web.Publishing.Tasks.dll" />
+  <UsingTask TaskName="TransformXml" AssemblyFile="libraries\Microsoft.Web.Publishing.Tasks.dll" />
   <Target Name="AfterBuild">
     <TransformXml Source="App.config" Transform="App.$(Configuration).config" Destination="App.config" StackTrace="true" />
   </Target>

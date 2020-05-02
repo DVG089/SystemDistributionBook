@@ -1,4 +1,5 @@
 ﻿
+using NLog;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
@@ -13,12 +14,16 @@ namespace SiteBook
     /// <summary>
     /// Базовый класс работы с RabbitMQ
     /// </summary>
-    public class RabbitMQ_SB
+    public class RabbitmqSB
     {
         /// <summary>
         /// Соединение с RabbitMQ
         /// </summary>
-        protected IConnection ConnectionRabbit;       
+        protected IConnection ConnectionRabbit;
+        /// <summary>
+        /// Журнал сообщений Nlog
+        /// </summary>
+        protected static Logger Log = LogManager.GetCurrentClassLogger();
         /// <summary>
         /// Канал связи для передачи книг
         /// </summary>
@@ -67,7 +72,23 @@ namespace SiteBook
         /// <summary>
         /// Конструктор объекта работы с RabbitMQ
         /// </summary>
-        public RabbitMQ_SB()
+        public RabbitmqSB()
+        {
+            try
+            {
+                IniInitializationComponent();
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
+            }
+        }
+
+        /// <summary>
+        /// Инициализация компонентов
+        /// </summary>
+        protected void IniInitializationComponent()
         {
             InitializationStringComponentSB();
             InitializationConnectionRabbitSB();
@@ -105,9 +126,17 @@ namespace SiteBook
         /// </summary>
         private void InitializationConnectionRabbitSB()
         {
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.Uri = new Uri(ConfigurationManager.ConnectionStrings["RabbitMQ"].ConnectionString);
-            ConnectionRabbit = factory.CreateConnection();
+            try
+            {
+                ConnectionFactory factory = new ConnectionFactory();
+                factory.Uri = new Uri(ConfigurationManager.ConnectionStrings["RabbitMQ"].ConnectionString);
+                ConnectionRabbit = factory.CreateConnection();
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
+            }
         }
 
         /// <summary>
@@ -116,8 +145,16 @@ namespace SiteBook
         /// <param name="bookJSON">Книга в JSON</param>
         public void PublishBookQueue(string bookJSON)
         {
-            byte[] bookBytes = Encoding.UTF8.GetBytes(bookJSON);
-            ChannelBook.BasicPublish(ExchangeBook, RoutingBook, null, bookBytes);
+            try
+            {
+                byte[] bookBytes = Encoding.UTF8.GetBytes(bookJSON);
+                ChannelBook.BasicPublish(ExchangeBook, RoutingBook, null, bookBytes);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                throw new RabbitmqException();
+            }
         }
 
         /// <summary>
@@ -127,9 +164,17 @@ namespace SiteBook
         /// <param name="propety">Тип свойстава сообщения</param>
         public void PublishClientQueue(string clientJSON, string propety)
         {
-            PropetyClient.Type = propety;
-            byte[] clientBytes = Encoding.UTF8.GetBytes(clientJSON);
-            ChannelClient.BasicPublish(ExchangeClient, RoutingClient, PropetyClient, clientBytes);
+            try
+            {
+                PropetyClient.Type = propety;
+                byte[] clientBytes = Encoding.UTF8.GetBytes(clientJSON);
+                ChannelClient.BasicPublish(ExchangeClient, RoutingClient, PropetyClient, clientBytes);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
+            }
         }
 
         /// <summary>
@@ -140,6 +185,15 @@ namespace SiteBook
             if (ConnectionRabbit != null) ConnectionRabbit.Close();
             if (ChannelClient != null) ChannelClient.Close();
             if (ChannelBook != null) ChannelBook.Close();
+        }
+
+        /// <summary>
+        /// Завершение приложения
+        /// </summary>
+        public void StopApplication()
+        {
+            Dispose();
+            Environment.Exit(0);
         }
     }
 }

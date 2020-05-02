@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,6 +19,10 @@ namespace SiteBook
         /// </summary>
         private Random Random;
         /// <summary>
+        /// Журнал сообщений Nlog
+        /// </summary>
+        private static Logger Log = LogManager.GetCurrentClassLogger();
+        /// <summary>
         /// Объект, отправляющий сигнал отмены
         /// </summary>
         private CancellationTokenSource CancelTokenSource;
@@ -32,7 +37,7 @@ namespace SiteBook
         /// <summary>
         /// Объект работы с RabbitMQ
         /// </summary>
-        private RabbitMQ_SB WorkRabbit;
+        private RabbitmqSB WorkRabbit;
         /// <summary>
         /// Объект команд консоли
         /// </summary>
@@ -86,7 +91,7 @@ namespace SiteBook
         /// </summary>
         private int MaxNumberPages { get; set; }
 
-        public RandomGenerationBook(RabbitMQ_SB workRabbit, int minInterval, int maxInterval)
+        public RandomGenerationBook(RabbitmqSB workRabbit, int minInterval, int maxInterval)
         {
             Random = new Random();
             CancelTokenSource = null;
@@ -111,14 +116,13 @@ namespace SiteBook
             {
                 TryGenerationBook();
             }
-            catch (System.IO.IOException)
-            {
-                string executionResult = "Ошибка соединения с RabbitMQ";
-                CommandConsole.StopConsole(executionResult);
-            }
             catch (Exception exception)
             {
-                CommandConsole.StopConsole(exception.Message);
+                if (!(exception is RabbitmqException))
+                {
+                    Log.Error(exception.ToString);
+                }
+                CommandConsole.StopConsole();
             }
         }
 

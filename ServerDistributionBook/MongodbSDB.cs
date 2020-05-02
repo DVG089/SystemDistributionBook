@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
+using NLog;
 using SiteBook;
 using System;
 using System.Collections.Generic;
@@ -13,24 +14,41 @@ namespace ServerDistributionBook
     /// <summary>
     /// Класс работы с MongoDB
     /// </summary>
-    internal class MongoDB_SDB: IOperationSDBDataBase
+    internal class MongoDbSDB: IOperationSDBDataBase
     {
         /// <summary>
         /// Коллекция MongoDB
         /// </summary>
         private IMongoCollection<ClientServerDB> CollectionMongo;
+        /// <summary>
+        /// Журнал сообщений Nlog
+        /// </summary>
+        private static Logger Log = LogManager.GetCurrentClassLogger();
+        /// <summary>
+        /// Объект управления сервером
+        /// </summary>
+        private ControlServerDB ServerDB;
 
         /// <summary>
         /// Конструктор объекта работы с MongoDB
         /// </summary>
-        public MongoDB_SDB()
+        public MongoDbSDB(ControlServerDB serverDB)
         {
+            ServerDB = serverDB;
             string connectionStringMongo = ConfigurationManager.ConnectionStrings["MongoDb"].ConnectionString; ;
             string dataBase = "SystemDistributionBook";
             string collection = "SDBCollection";
             MongoClient ClientMongo = new MongoClient(connectionStringMongo);
             IMongoDatabase DatabaseMongo = ClientMongo.GetDatabase(dataBase);
-            DatabaseMongo.RunCommand((Command<BsonDocument>)"{ping:1}");
+            try
+            {
+                DatabaseMongo.RunCommand((Command<BsonDocument>)"{ping:1}");
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                ServerDB.StopServer();
+            }
             CollectionMongo = DatabaseMongo.GetCollection<ClientServerDB>(collection);
         }
 
@@ -52,9 +70,17 @@ namespace ServerDistributionBook
         /// <param name="dateTime">Дата-время чтения активной книги</param>
         public void SetTimeReadActive(string address, DateTime dateTime)
         {
-            var filter = Builders<ClientServerDB>.Filter.Eq("Address", address);
-            var updateTimeReadActive = Builders<ClientServerDB>.Update.Set(x => x.TimeReadActive, dateTime);
-            CollectionMongo.UpdateOne(filter, updateTimeReadActive);
+            try
+            {
+                var filter = Builders<ClientServerDB>.Filter.Eq("Address", address);
+                var updateTimeReadActive = Builders<ClientServerDB>.Update.Set(x => x.TimeReadActive, dateTime);
+                CollectionMongo.UpdateOne(filter, updateTimeReadActive);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                throw new MongoException();
+            }
         }
 
         /// <summary>
@@ -63,9 +89,17 @@ namespace ServerDistributionBook
         /// <param name="address">Электронный адресс клиента</param>
         public void DeletionBookFromQueue(string address)
         {
-            var filter = Builders<ClientServerDB>.Filter.Eq("Address", address);
-            var updateBook = Builders<ClientServerDB>.Update.PopFirst(x => x.QueueBook);
-            CollectionMongo.UpdateOne(filter, updateBook);
+            try
+            {
+                var filter = Builders<ClientServerDB>.Filter.Eq("Address", address);
+                var updateBook = Builders<ClientServerDB>.Update.PopFirst(x => x.QueueBook);
+                CollectionMongo.UpdateOne(filter, updateBook);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                throw new MongoException();
+            }
         }
 
         /// <summary>
@@ -74,7 +108,15 @@ namespace ServerDistributionBook
         /// <param name="clientServer">Объект клиента</param>
         public void AddClient(ClientServerDB clientServer)
         {
-            CollectionMongo.InsertOne(clientServer);
+            try
+            {
+                CollectionMongo.InsertOne(clientServer);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                ServerDB.StopServer();
+            }
         }
 
         /// <summary>
@@ -83,7 +125,15 @@ namespace ServerDistributionBook
         /// <param name="address">Электронный адресс клиента</param>
         public void DeleteClient(string address)
         {
-            CollectionMongo.DeleteOne(p => p.Address == address);
+            try
+            {
+                CollectionMongo.DeleteOne(p => p.Address == address);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                ServerDB.StopServer();
+            }
         }
 
         /// <summary>
@@ -105,9 +155,17 @@ namespace ServerDistributionBook
         /// <param name="bookJSON">Книга в JSON</param>
         public void AddBookInQueue(string clientAddress, string bookJSON)
         {
-            var filter = Builders<ClientServerDB>.Filter.Eq("Address", clientAddress);
-            var updateBook = Builders<ClientServerDB>.Update.AddToSet(x => x.QueueBook, bookJSON);
-            CollectionMongo.UpdateOne(filter, updateBook);
+            try
+            {
+                var filter = Builders<ClientServerDB>.Filter.Eq("Address", clientAddress);
+                var updateBook = Builders<ClientServerDB>.Update.AddToSet(x => x.QueueBook, bookJSON);
+                CollectionMongo.UpdateOne(filter, updateBook);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                ServerDB.StopServer();
+            }
         }
 
         /// <summary>
@@ -117,9 +175,17 @@ namespace ServerDistributionBook
         /// <param name="timeRead">Даты-время освобождения клиента от чтения</param>
         public void SetTimeRead(string clientAddress, DateTime timeRead)
         {
-            var filter = Builders<ClientServerDB>.Filter.Eq("Address", clientAddress);
-            var updateTimeRead = Builders<ClientServerDB>.Update.Set(x => x.TimeRead, timeRead);
-            CollectionMongo.UpdateOne(filter, updateTimeRead);
+            try
+            {
+                var filter = Builders<ClientServerDB>.Filter.Eq("Address", clientAddress);
+                var updateTimeRead = Builders<ClientServerDB>.Update.Set(x => x.TimeRead, timeRead);
+                CollectionMongo.UpdateOne(filter, updateTimeRead);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                ServerDB.StopServer();
+            }
         }
 
         /// <summary>
@@ -128,7 +194,17 @@ namespace ServerDistributionBook
         /// <returns>Наличие клиентов</returns>
         public bool ClientsAvailability()
         {
-            return CollectionMongo.CountDocuments(new BsonDocument()) > 0;
+            bool availability = false;
+            try
+            {
+                availability = CollectionMongo.CountDocuments(new BsonDocument()) > 0;
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                ServerDB.StopServer();
+            }
+            return availability;
         }
 
         /// <summary>
@@ -137,8 +213,17 @@ namespace ServerDistributionBook
         /// <returns>Список объектов клиентов</returns>
         public List<ClientServerDB> GetAllClients()
         {
-            var filter = new BsonDocument();
-            var people = CollectionMongo.Find(filter).ToList();
+            List<ClientServerDB> people = null;
+            try
+            {
+                var filter = new BsonDocument();
+                people = CollectionMongo.Find(filter).ToList();
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                ServerDB.StopServer();
+            }
             return people;
         }
 
@@ -148,9 +233,17 @@ namespace ServerDistributionBook
         /// <param name="address"></param>
         public void DeleteLastBook(string address)
         {
-            var filter = Builders<ClientServerDB>.Filter.Eq("Address", address);
-            var updateBook = Builders<ClientServerDB>.Update.PopLast(x => x.QueueBook);
-            CollectionMongo.UpdateOne(filter, updateBook);
+            try
+            {
+                var filter = Builders<ClientServerDB>.Filter.Eq("Address", address);
+                var updateBook = Builders<ClientServerDB>.Update.PopLast(x => x.QueueBook);
+                CollectionMongo.UpdateOne(filter, updateBook);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                ServerDB.StopServer();
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿
+using NLog;
 using RabbitMQ.Client.Events;
 using SiteBook;
 using System;
@@ -20,17 +21,21 @@ namespace ServerDistributionBook
         /// </summary>
         private GroupImitationClientActivity WorkClientGroup;
         /// <summary>
+        /// Журнал сообщений Nlog
+        /// </summary>
+        private static Logger Log = LogManager.GetCurrentClassLogger();
+        /// <summary>
         /// Объект работы с MongoDB
         /// </summary>
-        private MongoDB_SDB WorkMongo;
+        private MongoDbSDB WorkMongo;
         /// <summary>
         /// Объект работы с MySQL
         /// </summary>
-        private MySQL_SDB WorkMySQL;
+        private MySqlSDB WorkMySQL;
         /// <summary>
         /// Объект работы с RabbitMQ
         /// </summary>
-        public RabbitMQ_SDB WorkRabbit;
+        public RabbitmqSDB WorkRabbit;
         /// <summary>
         /// Мьютекс выполнения одного метода
         /// </summary>
@@ -80,11 +85,11 @@ namespace ServerDistributionBook
         public ControlServerDB(int daysSecond)
         {
             WorkClientGroup = new GroupImitationClientActivity(this);
-            WorkMongo = new MongoDB_SDB();
-            WorkMySQL = new MySQL_SDB();
+            WorkMongo = new MongoDbSDB(this);
+            WorkMySQL = new MySqlSDB(this);
             MutexOnlyMethod = new Mutex();
             DaysSecond = daysSecond;
-            WorkRabbit = new RabbitMQ_SDB(this);
+            WorkRabbit = new RabbitmqSDB(this);
         }
 
         /// <summary>
@@ -98,34 +103,18 @@ namespace ServerDistributionBook
             {
                 TryAddDeleteClientRequest(sender, e);
             }
-            catch (System.TimeoutException)
-            {
-                string executionResult = "Ошибка соединения с MongoDB";
-                StopServer(executionResult);
-            }
-            catch (MongoDB.Driver.MongoConnectionException)
-            {
-                string executionResult = "Ошибка соединения с MongoDB";
-                StopServer(executionResult);
-            }
-            catch (MySql.Data.MySqlClient.MySqlException)
-            {
-                string executionResult = "Ошибка соединения с MySQL";
-                StopServer(executionResult);
-            }
-            catch (System.IO.IOException)
-            {
-                string executionResult = "Ошибка соединения с RabbitMQ";
-                StopServer(executionResult);
-            }
             catch (Exception exception)
             {
-                StopServer(exception.Message);
+                if (!CheckException(exception))
+                {
+                    Log.Error(exception.ToString);
+                }
+                StopServer();
             }
         }
 
         /// <summary>
-        ///  Обработки данных клиента из RabbitMQ без обработки исключений
+        ///  Обработки данных клиента из RabbitMQ без обработки общих исключений
         /// </summary>
         /// <param name="sender">Вызывающий объект</param>
         /// <param name="e">Сообщение из RabbitMQ</param>
@@ -156,6 +145,10 @@ namespace ServerDistributionBook
         /// <param name="client">Потенциальный клиент на разгруженные книги</param>
         private void UnloadingQueuesClientsServer(ClientSDB client)
         {
+            if (!WorkClientGroup.ClientsAvailability())
+            {
+                return;
+            }
             Dictionary<string, Queue<string>> unloadingBooksQueues = WorkClientGroup.UnloadingQueuesClients(client, AlignmentCoefficient);
             foreach (var dictionaryBookQueue in unloadingBooksQueues)
             {
@@ -168,11 +161,10 @@ namespace ServerDistributionBook
                     {
                         WorkRabbit.PublishBookQueue(book);
                     }
-                    catch (System.IO.IOException)
+                    catch (RabbitmqException)
                     {
                         WorkMongo.AddBookInQueue(dictionaryBookQueue.Key, book);
-                        string executionResult = "Ошибка соединения с RabbitMQ";
-                        StopServer(executionResult);
+                        StopServer();
                     }
                     dictionaryBookQueue.Value.Dequeue();
                 }
@@ -198,18 +190,16 @@ namespace ServerDistributionBook
                     WorkMySQL.AddClient(clientServer);
                     WorkRabbit.RedistributionQueue(WorkRabbit.QueueUnallocated, WorkRabbit.ExchangeBook, WorkRabbit.RoutingBook);
                 }
-                catch (MySql.Data.MySqlClient.MySqlException)
+                catch (MySqlException)
                 {
                     WorkMongo.DeleteClient(clientServer.Address);
-                    string executionResult = "Ошибка соединения с MySQL";
-                    StopServer(executionResult);
+                    StopServer();
                 }
-                catch (System.IO.IOException)
+                catch (RabbitmqException)
                 {
                     WorkMongo.DeleteClient(clientServer.Address);
                     WorkMySQL.FullDeleteClient(clientServer.Address);
-                    string executionResult = "Ошибка соединения с RabbitMQ";
-                    StopServer(executionResult);
+                    StopServer();
                 }
             }
         }
@@ -230,18 +220,16 @@ namespace ServerDistributionBook
                     WorkMySQL.DeleteClient(address);
                     WorkRabbit.RedistributionQueue(clientServer.QueueBook, WorkRabbit.ExchangeBook, WorkRabbit.RoutingBook);
                 }
-                catch (MySql.Data.MySqlClient.MySqlException)
+                catch (MySqlException)
                 {
                     WorkMongo.AddClient(clientServer);
-                    string executionResult = "Ошибка соединения с MySQL";
-                    StopServer(executionResult);
+                    StopServer();
                 }
-                catch (System.IO.IOException)
+                catch (RabbitmqException)
                 {
                     WorkMongo.AddClient(clientServer);
                     WorkMySQL.SetSubscriptionOn(address);
-                    string executionResult = "Ошибка соединения с RabbitMQ";
-                    StopServer(executionResult);
+                    StopServer();
                 }
             }
         }
@@ -257,24 +245,18 @@ namespace ServerDistributionBook
             {
                 TryDistributionBookRequest(sender, e);
             }
-            catch (System.IO.IOException)
-            {
-                string executionResult = "Ошибка соединения с RabbitMQ";
-                StopServer(executionResult);
-            }
-            catch (MongoDB.Driver.MongoConnectionException)
-            {
-                string executionResult = "Ошибка соединения с MongoDB";
-                StopServer(executionResult);
-            }
             catch (Exception exception)
             {
-                StopServer(exception.Message);
+                if (!CheckException(exception))
+                {
+                    Log.Error(exception.ToString);
+                }
+                StopServer();
             }
         }
 
         /// <summary>
-        /// Распределение книги из RabbitMQ без обработки исключений
+        /// Распределение книги из RabbitMQ без обработки общих исключений
         /// </summary>
         /// <param name="sender">Вызывающий объект</param>
         /// <param name="e">Сообщение из RabbitMQ</param>
@@ -297,11 +279,10 @@ namespace ServerDistributionBook
                 {
                     WorkRabbit.BasicAckRabbit(sender, e);
                 }
-                catch (System.IO.IOException)
+                catch (RabbitmqException)
                 {
                     WorkMongo.DeleteLastBook(clientAddress);
-                    string executionResult = "Ошибка соединения с RabbitMQ";
-                    StopServer(executionResult);
+                    StopServer();
                 }
                 WorkClientGroup.InformSendingBook(clientAddress);
             }
@@ -335,7 +316,7 @@ namespace ServerDistributionBook
                 WorkMongo.SetTimeRead(clientServer.Address, timeReadRecalculation);
                 WorkClientGroup.StartImitationActivityClient(clientServer.Address);
             }
-        }       
+        }
 
         /// <summary>
         /// Запуск прослушивания очередей RabbitMQ
@@ -408,24 +389,10 @@ namespace ServerDistributionBook
         /// Остановка сервера
         /// </summary>
         /// <param name="executionResult">Результат выполнения</param>
-        public void StopServer(string executionResult)
+        public void StopServer()
         {
             WorkRabbit.Dispose();
-            WriteExecutionResult(executionResult);
             Environment.Exit(0);
-        }
-
-        /// <summary>
-        /// Запись результата выполнения в журнал
-        /// </summary>
-        /// <param name="executionResult">Результат выполнения</param>
-        public static void WriteExecutionResult(string executionResult)
-        {
-            string path = @"ExecutionResultLog.txt";
-            using (StreamWriter Writer = new StreamWriter(path, true, System.Text.Encoding.Default))
-            {
-                Writer.WriteLine($"{DateTime.UtcNow.ToLocalTime()} {executionResult}");
-            }
         }
 
         /// <summary>
@@ -439,6 +406,16 @@ namespace ServerDistributionBook
             {
                 AlignmentCoefficient = alignmentCoefficient;
             }
+        }
+
+        public static bool CheckException(Exception exception)
+        {
+            bool check = false;
+            if (exception is MongoException || exception is MySqlException || exception is RabbitmqException)
+            {
+                check = true;
+            }
+            return check;
         }
     }
 }

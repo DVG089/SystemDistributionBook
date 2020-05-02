@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.ServiceModel;
 using System.Text;
 using System.Threading.Tasks;
 using WinFormSDB.WcfServiceSDB;
@@ -16,11 +17,11 @@ namespace WinFormSDB
         /// <summary>
         /// Объект сервиса SDB
         /// </summary>
-        private ServiceSDBClient Service_SDB;
+        private ServiceSDBClient Service;
         /// <summary>
         /// Объект формы SDB
         /// </summary>
-        private FormSDB Form_SDB;
+        private FormSDB Form;
         /// <summary>
         /// Объект фильтра
         /// </summary>
@@ -44,8 +45,8 @@ namespace WinFormSDB
         /// <param name="form">Объект формы SDB</param>
         public ControlActions(FormSDB form)
         {
-            Service_SDB = new ServiceSDBClient();
-            Form_SDB = form;
+            Service = new ServiceSDBClient();
+            Form = form;
             Filter = new FilterSDB();
             Address = null;
             Language = null;
@@ -60,12 +61,16 @@ namespace WinFormSDB
         public DataSet GetClientStatisticsByFilter()
         {
             DataSet dataSet = null;
-            Language = Form_SDB.cmbLanguage.Text;
+            Language = Form.cmbLanguage.Text;
             InitializationStartPeriod();
-            FillFilterSDB(Form_SDB.cmbStatus.Text, Form_SDB.cmbLanguage.Text, Form_SDB.txbClientBook.Text, StartPeriod);
+            FillFilterSDB(Form.cmbStatus.Text, Form.cmbLanguage.Text, Form.txbClientBook.Text, StartPeriod);
             try
             {
-                dataSet = Service_SDB.GetClientStatistics(Filter);
+                dataSet = Service.GetClientStatistics(Filter);
+            }
+            catch (FaultException<MySqlException> mySqlException)
+            {
+                OutputFormError(mySqlException.Detail.Message);
             }
             catch
             {
@@ -81,13 +86,17 @@ namespace WinFormSDB
         public DataSet GetBooksByFilter()
         {
             DataSet dataSet = null;
-            Language = Form_SDB.cmbLanguage.Text;
+            Language = Form.cmbLanguage.Text;
             InitializationStartPeriod();
-            FillFilterSDB(Form_SDB.cmbStatus.Text, Form_SDB.cmbLanguage.Text, Form_SDB.txbClientBook.Text, StartPeriod);
+            FillFilterSDB(Form.cmbStatus.Text, Form.cmbLanguage.Text, Form.txbClientBook.Text, StartPeriod);
             Address = "";
             try
             {
-                dataSet = Service_SDB.GetBook(Filter, Address);
+                dataSet = Service.GetBook(Filter, Address);
+            }
+            catch (FaultException<MySqlException> mySqlException)
+            {
+                OutputFormError(mySqlException.Detail.Message);
             }
             catch
             {
@@ -103,11 +112,15 @@ namespace WinFormSDB
         public DataSet GetClientStatisticsByBook()
         {
             DataSet dataSet = null;
-            Address = Form_SDB.dgvBooks.Rows[Form_SDB.dgvBooks.CurrentCell.RowIndex].Cells["AddressClient"].Value.ToString();
+            Address = Form.dgvBooks.Rows[Form.dgvBooks.CurrentCell.RowIndex].Cells["AddressClient"].Value.ToString();
             FillFilterSDB("", Language, Address, StartPeriod);
             try
             {
-                dataSet = Service_SDB.GetClientStatistics(Filter);
+                dataSet = Service.GetClientStatistics(Filter);
+            }
+            catch (FaultException<MySqlException> mySqlException)
+            {
+                OutputFormError(mySqlException.Detail.Message);
             }
             catch
             {
@@ -123,11 +136,15 @@ namespace WinFormSDB
         public DataSet GetBooksByClient()
         {
             DataSet dataSet = null;
-            Address = Form_SDB.dgvClientsStatistics.Rows[Form_SDB.dgvClientsStatistics.CurrentCell.RowIndex].Cells["Address"].Value.ToString();
+            Address = Form.dgvClientsStatistics.Rows[Form.dgvClientsStatistics.CurrentCell.RowIndex].Cells["Address"].Value.ToString();
             FillFilterSDB("", Language, "", StartPeriod);
             try
             {
-                dataSet = Service_SDB.GetBook(Filter, Address);
+                dataSet = Service.GetBook(Filter, Address);
+            }
+            catch (FaultException<MySqlException> mySqlException)
+            {
+                OutputFormError(mySqlException.Detail.Message);
             }
             catch
             {
@@ -144,15 +161,19 @@ namespace WinFormSDB
         public DataSet GetClientInfo(object sender)
         {
             DataSet dataSet = null;
-            if (sender == Form_SDB.btnInfoClientCS)
-                Address = Form_SDB.dgvClientsStatistics.Rows[Form_SDB.dgvClientsStatistics.CurrentCell.RowIndex].Cells["Address"].Value.ToString();
-            else if (sender == Form_SDB.btnInfoClientB)
-                Address = Form_SDB.dgvBooks.Rows[Form_SDB.dgvBooks.CurrentCell.RowIndex].Cells["AddressClient"].Value.ToString();
+            if (sender == Form.btnInfoClientCS)
+                Address = Form.dgvClientsStatistics.Rows[Form.dgvClientsStatistics.CurrentCell.RowIndex].Cells["Address"].Value.ToString();
+            else if (sender == Form.btnInfoClientB)
+                Address = Form.dgvBooks.Rows[Form.dgvBooks.CurrentCell.RowIndex].Cells["AddressClient"].Value.ToString();
             else
                 Address = "";
             try
             {
-                dataSet = Service_SDB.GetClientInfo(Address);
+                dataSet = Service.GetClientInfo(Address);
+            }
+            catch (FaultException<MySqlException> mySqlException)
+            {
+                OutputFormError(mySqlException.Detail.Message);
             }
             catch
             {
@@ -176,7 +197,7 @@ namespace WinFormSDB
         /// </summary>
         private void InitializationStartPeriod()
         {
-            double Period = Decimal.ToDouble(Form_SDB.numPeriod.Value);
+            double Period = Decimal.ToDouble(Form.numPeriod.Value);
             if (Period == 0)
             {
                 StartPeriod = null;
@@ -206,7 +227,7 @@ namespace WinFormSDB
         /// </summary>
         public void CloseService()
         {
-            Service_SDB.Close();
+            Service.Close();
         }
     }
 }

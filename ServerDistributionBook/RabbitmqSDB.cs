@@ -15,7 +15,7 @@ namespace ServerDistributionBook
     /// <summary>
     /// Класс работы с RabbitMQ
     /// </summary>
-    internal class RabbitMQ_SDB : RabbitMQ_SB, IDisposable
+    internal class RabbitmqSDB : RabbitmqSB, IDisposable
     {
         /// <summary>
         /// Объект управления сервером
@@ -42,17 +42,25 @@ namespace ServerDistributionBook
         /// Конструктор объекта работы с RabbitMQ
         /// </summary>
         /// <param name="serverDB">Объект управления сервером</param>
-        public RabbitMQ_SDB(ControlServerDB serverDB)
-            : base ()
+        public RabbitmqSDB(ControlServerDB serverDB)
+            : base()
         {
             ServerDB = serverDB;
             InitializationStringComponentSDB();
 
-            ChannelBook.QueueDeclare(QueueUnallocated, true, false, false, null);
-            ChannelBook.QueueBind(QueueUnallocated, ExchangeBook, RoutingUnallocated, null);
+            try
+            {
+                ChannelBook.QueueDeclare(QueueUnallocated, true, false, false, null);
+                ChannelBook.QueueBind(QueueUnallocated, ExchangeBook, RoutingUnallocated, null);
 
-            ConsumerBook = new EventingBasicConsumer(ChannelBook);
-            ConsumerClient = new EventingBasicConsumer(ChannelClient);
+                ConsumerBook = new EventingBasicConsumer(ChannelBook);
+                ConsumerClient = new EventingBasicConsumer(ChannelClient);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
+            }
 
             InitializationMethodsConsumers();
         }
@@ -101,6 +109,11 @@ namespace ServerDistributionBook
                     }
                 }
             }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                throw new RabbitmqException();
+            }
             finally
             {
                 if (channel != null) channel.Close();
@@ -113,7 +126,15 @@ namespace ServerDistributionBook
         /// <param name="e">Сообщение RabbitMQ</param>
         public void PublishUnallocatedQueue(BasicDeliverEventArgs e)
         {
-            ChannelBook.BasicPublish(ExchangeBook, RoutingUnallocated, null, e.Body);
+            try
+            {
+                ChannelBook.BasicPublish(ExchangeBook, RoutingUnallocated, null, e.Body);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
+            }
         }
 
         /// <summary>
@@ -139,6 +160,11 @@ namespace ServerDistributionBook
                     }
                     else break;
                 }
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                throw new RabbitmqException();
             }
             finally
             {
@@ -179,8 +205,16 @@ namespace ServerDistributionBook
         /// </summary>
         public void StartListeningQueues()
         {
-            ChannelClient.BasicConsume(QueueClient, false, ConsumerClient);
-            ChannelBook.BasicConsume(QueueBook, false, ConsumerBook);
+            try
+            {
+                ChannelClient.BasicConsume(QueueClient, false, ConsumerClient);
+                ChannelBook.BasicConsume(QueueBook, false, ConsumerBook);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception.ToString);
+                StopApplication();
+            }
         }
 
         /// <summary>
@@ -191,15 +225,23 @@ namespace ServerDistributionBook
         public void BasicAckRabbit(object sender, BasicDeliverEventArgs e)
         {
             IModel channel;
-            if (sender == ConsumerBook)
+            try
             {
-                channel = ChannelBook;
+                if (sender == ConsumerBook)
+                {
+                    channel = ChannelBook;
+                }
+                else
+                {
+                    channel = ChannelClient;
+                }
+                channel.BasicAck(e.DeliveryTag, false);
             }
-            else
+            catch (Exception exception)
             {
-                channel = ChannelClient;
+                Log.Error(exception.ToString);
+                throw new RabbitmqException();
             }
-            channel.BasicAck(e.DeliveryTag, false);
         }
     }
 }
