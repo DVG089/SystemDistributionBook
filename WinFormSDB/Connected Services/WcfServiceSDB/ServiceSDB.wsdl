@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wsdl:definitions xmlns:wsap="http://schemas.xmlsoap.org/ws/2004/08/addressing/policy" xmlns:wsa10="http://www.w3.org/2005/08/addressing" xmlns:tns="http://tempuri.org/" xmlns:msc="http://schemas.microsoft.com/ws/2005/12/wsdl/contract" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsx="http://schemas.xmlsoap.org/ws/2004/09/mex" xmlns:wsp="http://schemas.xmlsoap.org/ws/2004/09/policy" xmlns:wsam="http://www.w3.org/2007/05/addressing/metadata" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:wsaw="http://www.w3.org/2006/05/addressing/wsdl" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:xsd="http://www.w3.org/2001/XMLSchema" name="ServiceSDB" targetNamespace="http://tempuri.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsp:Policy wsu:Id="BasicHttpsBinding_IServiceSDB_policy">
+    <wsp:ExactlyOne>
+      <wsp:All>
+        <sp:TransportBinding xmlns:sp="http://schemas.xmlsoap.org/ws/2005/07/securitypolicy">
+          <wsp:Policy>
+            <sp:TransportToken>
+              <wsp:Policy>
+                <sp:HttpsToken RequireClientCertificate="false" />
+              </wsp:Policy>
+            </sp:TransportToken>
+            <sp:AlgorithmSuite>
+              <wsp:Policy>
+                <sp:Basic256 />
+              </wsp:Policy>
+            </sp:AlgorithmSuite>
+            <sp:Layout>
+              <wsp:Policy>
+                <sp:Strict />
+              </wsp:Policy>
+            </sp:Layout>
+          </wsp:Policy>
+        </sp:TransportBinding>
+      </wsp:All>
+    </wsp:ExactlyOne>
+  </wsp:Policy>
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://tempuri.org/Imports">
+      <xsd:import schemaLocation="http://localhost:65407/ServiceSDB.svc?xsd=xsd0" namespace="http://tempuri.org/" />
+      <xsd:import schemaLocation="http://localhost:65407/ServiceSDB.svc?xsd=xsd1" namespace="http://schemas.microsoft.com/2003/10/Serialization/" />
+      <xsd:import schemaLocation="http://localhost:65407/ServiceSDB.svc?xsd=xsd2" />
+      <xsd:import schemaLocation="http://localhost:65407/ServiceSDB.svc?xsd=xsd3" namespace="http://schemas.datacontract.org/2004/07/WcfServiceSDB" />
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="IServiceSDB_GetClientInfo_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetClientInfo" />
+  </wsdl:message>
+  <wsdl:message name="IServiceSDB_GetClientInfo_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetClientInfoResponse" />
+  </wsdl:message>
+  <wsdl:message name="IServiceSDB_GetBook_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetBook" />
+  </wsdl:message>
+  <wsdl:message name="IServiceSDB_GetBook_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetBookResponse" />
+  </wsdl:message>
+  <wsdl:message name="IServiceSDB_GetClientStatistics_InputMessage">
+    <wsdl:part name="parameters" element="tns:GetClientStatistics" />
+  </wsdl:message>
+  <wsdl:message name="IServiceSDB_GetClientStatistics_OutputMessage">
+    <wsdl:part name="parameters" element="tns:GetClientStatisticsResponse" />
+  </wsdl:message>
+  <wsdl:message name="IServiceSDB_GetClientStatistics_MySqlExceptionFault_FaultMessage">
+    <wsdl:part xmlns:q1="http://schemas.datacontract.org/2004/07/WcfServiceSDB" name="detail" element="q1:MySqlException" />
+  </wsdl:message>
+  <wsdl:portType name="IServiceSDB">
+    <wsdl:operation name="GetClientInfo">
+      <wsdl:input wsaw:Action="http://tempuri.org/IServiceSDB/GetClientInfo" message="tns:IServiceSDB_GetClientInfo_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IServiceSDB/GetClientInfoResponse" message="tns:IServiceSDB_GetClientInfo_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="GetBook">
+      <wsdl:input wsaw:Action="http://tempuri.org/IServiceSDB/GetBook" message="tns:IServiceSDB_GetBook_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IServiceSDB/GetBookResponse" message="tns:IServiceSDB_GetBook_OutputMessage" />
+    </wsdl:operation>
+    <wsdl:operation name="GetClientStatistics">
+      <wsdl:input wsaw:Action="http://tempuri.org/IServiceSDB/GetClientStatistics" message="tns:IServiceSDB_GetClientStatistics_InputMessage" />
+      <wsdl:output wsaw:Action="http://tempuri.org/IServiceSDB/GetClientStatisticsResponse" message="tns:IServiceSDB_GetClientStatistics_OutputMessage" />
+      <wsdl:fault wsaw:Action="http://tempuri.org/IServiceSDB/GetClientStatisticsMySqlExceptionFault" name="MySqlExceptionFault" message="tns:IServiceSDB_GetClientStatistics_MySqlExceptionFault_FaultMessage" />
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="BasicHttpBinding_IServiceSDB" type="tns:IServiceSDB">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetClientInfo">
+      <soap:operation soapAction="http://tempuri.org/IServiceSDB/GetClientInfo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetBook">
+      <soap:operation soapAction="http://tempuri.org/IServiceSDB/GetBook" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetClientStatistics">
+      <soap:operation soapAction="http://tempuri.org/IServiceSDB/GetClientStatistics" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+      <wsdl:fault name="MySqlExceptionFault">
+        <soap:fault use="literal" name="MySqlExceptionFault" namespace="" />
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="BasicHttpsBinding_IServiceSDB" type="tns:IServiceSDB">
+    <wsp:PolicyReference URI="#BasicHttpsBinding_IServiceSDB_policy" />
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http" />
+    <wsdl:operation name="GetClientInfo">
+      <soap:operation soapAction="http://tempuri.org/IServiceSDB/GetClientInfo" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetBook">
+      <soap:operation soapAction="http://tempuri.org/IServiceSDB/GetBook" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="GetClientStatistics">
+      <soap:operation soapAction="http://tempuri.org/IServiceSDB/GetClientStatistics" style="document" />
+      <wsdl:input>
+        <soap:body use="literal" />
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" />
+      </wsdl:output>
+      <wsdl:fault name="MySqlExceptionFault">
+        <soap:fault use="literal" name="MySqlExceptionFault" namespace="" />
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="ServiceSDB">
+    <wsdl:port name="BasicHttpBinding_IServiceSDB" binding="tns:BasicHttpBinding_IServiceSDB">
+      <soap:address location="http://localhost:65407/ServiceSDB.svc" />
+    </wsdl:port>
+    <wsdl:port name="BasicHttpsBinding_IServiceSDB" binding="tns:BasicHttpsBinding_IServiceSDB">
+      <soap:address location="https://localhost:44371/ServiceSDB.svc" />
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

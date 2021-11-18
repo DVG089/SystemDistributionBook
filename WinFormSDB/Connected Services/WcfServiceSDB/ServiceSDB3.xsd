@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:tns="http://schemas.datacontract.org/2004/07/WcfServiceSDB" elementFormDefault="qualified" targetNamespace="http://schemas.datacontract.org/2004/07/WcfServiceSDB" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:complexType name="FilterSDB">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="ClientBook" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="Language" nillable="true" type="xs:string" />
+      <xs:element minOccurs="0" name="StartPeriod" nillable="true" type="xs:dateTime" />
+      <xs:element minOccurs="0" name="Status" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="FilterSDB" nillable="true" type="tns:FilterSDB" />
+  <xs:complexType name="MySqlException">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="Message" nillable="true" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="MySqlException" nillable="true" type="tns:MySqlException" />
+</xs:schema>

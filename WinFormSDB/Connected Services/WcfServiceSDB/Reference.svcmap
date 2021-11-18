@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="dac057d3-d5a0-4796-a8de-180496126587" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+  <ClientOptions>
+    <GenerateAsynchronousMethods>false</GenerateAsynchronousMethods>
+    <GenerateTaskBasedAsynchronousMethod>true</GenerateTaskBasedAsynchronousMethod>
+    <EnableDataBinding>true</EnableDataBinding>
+    <ExcludedTypes />
+    <ImportXmlTypes>false</ImportXmlTypes>
+    <GenerateInternalTypes>false</GenerateInternalTypes>
+    <GenerateMessageContracts>false</GenerateMessageContracts>
+    <NamespaceMappings />
+    <CollectionMappings />
+    <GenerateSerializableTypes>true</GenerateSerializableTypes>
+    <Serializer>Auto</Serializer>
+    <UseSerializerForFaults>true</UseSerializerForFaults>
+    <ReferenceAllAssemblies>true</ReferenceAllAssemblies>
+    <ReferencedAssemblies />
+    <ReferencedDataContractTypes />
+    <ServiceContractMappings />
+  </ClientOptions>
+  <MetadataSources>
+    <MetadataSource Address="http://localhost:65407/ServiceSDB.svc" Protocol="http" SourceId="1" />
+  </MetadataSources>
+  <Metadata>
+    <MetadataFile FileName="ServiceSDB.xsd" MetadataType="Schema" ID="6ad0df16-9895-4010-8992-a6156c5ce1b2" SourceId="1" SourceUrl="http://localhost:65407/ServiceSDB.svc?xsd=xsd0" />
+    <MetadataFile FileName="ServiceSDB1.xsd" MetadataType="Schema" ID="f6094d55-18ec-4aa8-9476-20a83c9bd49e" SourceId="1" SourceUrl="http://localhost:65407/ServiceSDB.svc?xsd=xsd1" />
+    <MetadataFile FileName="ServiceSDB2.xsd" MetadataType="Schema" ID="75b38068-853e-4f2a-aa91-20fd515016a3" SourceId="1" SourceUrl="http://localhost:65407/ServiceSDB.svc?xsd=xsd2" />
+    <MetadataFile FileName="ServiceSDB3.xsd" MetadataType="Schema" ID="50b9a95f-49da-4136-9a01-9da5cf850e3b" SourceId="1" SourceUrl="http://localhost:65407/ServiceSDB.svc?xsd=xsd3" />
+    <MetadataFile FileName="ServiceSDB.disco" MetadataType="Disco" ID="4f973e5c-5301-4be4-bb45-901ebec41c14" SourceId="1" SourceUrl="http://localhost:65407/ServiceSDB.svc?disco" />
+    <MetadataFile FileName="ServiceSDB.wsdl" MetadataType="Wsdl" ID="eadc7c6b-fdcd-423c-9f77-a4ef34164266" SourceId="1" SourceUrl="http://localhost:65407/ServiceSDB.svc?wsdl" />
+  </Metadata>
+  <Extensions>
+    <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
+    <ExtensionFile FileName="configuration.svcinfo" Name="configuration.svcinfo" />
+  </Extensions>
+</ReferenceGroup>
